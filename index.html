@@ -2716,6 +2716,162 @@ function mgBedah(){const[c,x]=cv(480,270);mgBg(x);mgHeader(x,'Bedah Minor','Buan
   mgStrip(x,['mint','sirih','cengkeh','kunyit'],['cengkeh'],'Lalu menginap di Puskesmas');return c;}
 const MG_SCREENS={sheet:mgSheet,konsul:mgKonsul,resep:mgResep,sementara:mgSementara,gic:mgGIC,komposit:mgKomposit,psa:mgPSA,scaling:mgScaling,susu:mgSusu,penyulit:mgPenyulit,bedah:mgBedah};
 
+/* ---- v3/anterior.js ---- */
+/* ==== Gigi anterior potongan labial (Fase 3b-2, permintaan user 2026-11-17: "anterior jangan potongan sagital, potongan labial saja") ====
+ * Seri dengan toothR (geraham): kanvas 170×166, cx 85, gaya warna sama. Dilihat dari bibir: mesial kiri, distal kanan, insisal di atas.
+ * o: caries 'shallow'|'deep' (karies proksimal mesial, kelas III) · cav 'deep'|'frac'|'stain' (hasil preparasi) · fill 0..1 · liner
+ *    frac (sudut insisal mesial patah, kelas IV) · stain (mahkota kekuningan). s = skala gambar (2 = HD zoom). */
+const _ta = {};
+/** Bentuk gigi anterior (dipakai gambar & masker minigame). Semua koordinat dalam satuan gambar dasar. */
+function antShape(o) {
+  o = o || {}; const cx = 85, E = 12, CEJ = 76, AP = 154;
+  /* setengah lebar mahkota: lebar di insisal (sudut membulat), paling lebar dekat sepertiga insisal, menyempit ke CEJ */
+  const hwC = j => { const u = (j - E) / (CEJ - E); let w = 25 + 2.5 * Math.sin(Math.min(1, u * 2.4) * Math.PI / 2) - 13.5 * Math.pow(Math.max(0, u - .3) / .7, 1.6); if (j < E + 5) w -= 5 - Math.sqrt(Math.max(0, 25 - (j - E - 5) ** 2)); return w; };
+  const xL = j => cx - hwC(j), xR = j => cx + hwC(j);
+  const w0 = hwC(CEJ), rc = t => cx + 2 * t * t, hw = t => { const b = w0 * Math.pow(1 - t, .85) + .6; return t < .86 ? b : b * Math.sqrt(Math.max(0, 1 - ((t - .86) / .14) ** 2)); };
+  const missing = (i, j) => !!o.frac && i + j < cx + 8;
+  const crownFull = (i, j) => j >= E && j <= CEJ && Math.abs(i - cx) <= hwC(j);
+  const inRoot = (i, j) => { if (j <= CEJ || j > AP) return false; const t = (j - CEJ) / (AP - CEJ); return Math.abs(i - rc(t)) <= hw(t); };
+  const inCrown = (i, j) => crownFull(i, j) && !missing(i, j);
+  const inT = (i, j) => inCrown(i, j) || inRoot(i, j);
+  const et = j => j < E + 14 ? 6 : Math.max(0, 6 * (CEJ - j) / (CEJ - E - 14));
+  const isEnamel = (i, j) => inCrown(i, j) && et(j) >= .7 && (hwC(j) - Math.abs(i - cx) < et(j) || j - E < et(j) || (o.frac && i + j - (cx + 8) < 3));
+  /* pulpa: tiga tanduk kecil di bawah insisal, ruang melebar lalu menyempit jadi satu saluran ke apeks */
+  const pw = j => { if (j < 31) return 0; if (j <= CEJ) return Math.min(1, Math.sqrt((j - 31) / 3)) * (9.5 - 6.5 * Math.max(0, (j - 46) / (CEJ - 46))); const t = (j - CEJ) / (AP - 4 - CEJ); return t >= 1 ? 0 : 3 * Math.pow(1 - t, 1.1) + .5; };
+  const pcx = j => j <= CEJ ? cx : rc((j - CEJ) / (AP - CEJ));
+  const top = i => 38 - 4 * Math.max(0, Math.cos((i - cx) / 6.5 * Math.PI)) * Math.max(0, 1 - Math.abs(i - cx) / 10);
+  const isPulp = (i, j) => j >= top(i) && j < AP - 4 && Math.abs(i - pcx(j)) < pw(j);
+  const pulpCh = (i, j) => isPulp(i, j) && j <= CEJ, canal = (i, j) => isPulp(i, j) && j > CEJ;
+  const deep = o.caries === 'deep' || o.cav === 'deep', ly = 44, lx = () => xL(ly) + (deep ? 3 : 2), rx = deep ? 10 : 7, ry = deep ? 11 : 8;
+  const cr = (i, j, n) => { if (!o.caries) return 0; const ex = (i - lx()) / rx, ey = (j - ly) / ry, q = ex * ex + ey * ey; return q < .45 - n * .3 ? 2 : q < .9 - n * .4 ? 1 : q < 1.25 ? .5 : 0; };
+  const inCav = (i, j) => { if (!o.cav) return false;
+    if (o.cav === 'stain') return crownFull(i, j) && j <= CEJ - 3;
+    if (o.cav === 'frac') return crownFull(i, j) && i + j < cx + 11;
+    const ex = (i - lx()) / (rx + .5), ey = (j - ly) / (ry + .5); return crownFull(i, j) && ex * ex + ey * ey < 1; };
+  const cavFill = (i, j) => { const f = o.fill || 0; if (!f) return false;
+    if (o.cav === 'stain') return j >= CEJ - 3 - f * (CEJ - 3 - E); if (o.cav === 'frac') return i + j >= cx + 11 - f * 30;
+    const R = lx() + rx, L = lx() - rx; return i >= R - f * (R - L); };
+  const gumTop = i => { const e = Math.max(0, Math.abs(i - cx) - 16); return 66 + 12 * (1 - Math.exp(-e / 12)); };
+  const boneTop = i => { const e = Math.max(0, Math.abs(i - cx) - 16); return 84 + 4 * (1 - Math.exp(-e / 16)); };
+  return { cx, E, CEJ, AP, hwC, xL, xR, rc, hw, pcx, pw, inT, inCrown, crownFull, inRoot, isEnamel, isPulp, pulpCh, canal, cr, inCav, cavFill, missing, gumTop, boneTop, et };
+}
+/** Gambar gigi anterior potongan labial (cache per opsi & skala). */
+function toothA(o, s) {
+  o = o || {}; s = s || 1; const key = s + '|' + JSON.stringify(o); if (_ta[key]) return _ta[key];
+  const W0 = 170, H0 = 166, W = W0 * s, H = H0 * s, A = antShape(o), cx = A.cx; const [c, x] = cv(W, H); const img = x.createImageData(W, H), D = img.data;
+  const put = (I, J, cc) => { const k = (J * W + I) * 4; D[k] = cc[0]; D[k + 1] = cc[1]; D[k + 2] = cc[2]; D[k + 3] = 255; };
+  const st = 1 / s, near = (i, j, r, f) => { for (let a = -r; a <= r + 1e-6; a += st) for (let b = -r; b <= r + 1e-6; b += st) if (f(i + a, j + b)) return true; return false; };
+  const tissue = (i, j) => j < 104 || ((i - cx) / 84) ** 2 + ((j - 104) / (H0 - 102)) ** 2 < 1.02;
+  const marrow = (i, j) => { let best = 9; const gx = Math.floor(i / 6), gy = Math.floor(j / 6); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { if (hash(gx + a + 11, gy + b + 5) < .35) continue; const px = (gx + a) * 6 + hash(gx + a, gy + b) * 6, py = (gy + b) * 6 + hash(gy + b + 7, gx + a + 3) * 6; const dd = Math.hypot(i - px, j - py); if (dd < best) best = dd; } return best; };
+  const C_ = rgb, EN = C_('#f8f4ea'), ENs = C_('#d8d0be'), ENhi = C_('#ffffff'), ENb = C_('#e4e8ee'), DE = C_('#efd2a0'), DEs = C_('#d2ac78'), TUB = C_('#dcb886'), DEJ = C_('#c89e6a'),
+    PU = C_('#e2566a'), PUd = C_('#b02a44'), PUh = C_('#f48a98'), CEM = C_('#cfae74'), COMP = C_('#f4eedc'), COMPs = C_('#e6dcc2'), STN = C_('#c8963c'), VEIN = C_('#4a58c0'), NRV = C_('#f0c848');
+  for (let J = 0; J < H; J++) for (let I = 0; I < W; I++) {
+    const i = (I + .5) / s - .5, j = (J + .5) / s - .5, d = i - cx, hp = hash(I, J); let col = null;
+    const cavHere = A.inCav(i, j), filled = cavHere && A.cavFill(i, j);
+    if (A.inT(i, j) || filled) {
+      if (A.isEnamel(i, j)) {
+        col = mixA(EN, ENs, Math.min(1, Math.max(0, d / 30)) * .7); if (j < A.E + 4) col = mixA(col, ENb, .6);
+        if (((d + 15) / 2.5) ** 2 + ((j - 32) / 12) ** 2 < 1 && hp < .8) col = ENhi;
+        if (!near(i, j, 1, (a, b) => A.isEnamel(a, b) || !A.inT(a, b))) col = mixA(col, DEJ, .45);
+      } else {
+        col = mixA(DE, DEs, Math.min(1, Math.abs(d) / 26) * .6 + Math.max(0, (j - 90) / 200));
+        const r = Math.hypot(d, j - 64), ang = Math.atan2(j - 64, d), tb = j < 82 ? ((ang * 10 + Math.sin(r * .16) * .6) % 1 + 1) % 1 : (((j * .33) + (d * .06)) % 1 + 1) % 1;
+        if (tb < .14 && hp < .85) col = mixA(col, TUB, .7);
+        if (near(i, j, 1.2, A.isPulp) && !A.isPulp(i, j)) col = mixA(col, C_('#c69070'), .55);
+        if (A.inRoot(i, j) && j > A.CEJ + 2 && !near(i, j, 1, (a, b) => A.inT(a, b))) col = CEM;
+      }
+      if (A.isPulp(i, j)) { const ch = A.pulpCh(i, j); col = mixA(PU, PUd, ch ? Math.min(1, Math.max(0, (j - 36) / 60)) : .5); if (ch && j < 46) col = mixA(col, PUh, .4);
+        if (j > 52) { const q = (i - A.pcx(j)) / Math.max(.8, A.pw(j)); if (Math.abs(q + .4) < .16) col = VEIN; else if (Math.abs(q - .35) < .14) col = NRV; } }
+      if (o.stain && A.inCrown(i, j) && !A.isPulp(i, j) && !(filled && o.cav === 'stain')) col = mixA(col, STN, (A.isEnamel(i, j) ? .5 : .32) + hash(I >> 2, J >> 2) * .08);
+      const n = hash(I >> 1, J >> 1) * .35, k = A.cr(i, j, n);
+      if (k && A.inT(i, j) && !A.isPulp(i, j)) col = k === 2 ? (hp < .5 ? C_('#2a160c') : C_('#3c2212')) : k === 1 ? (hp < .35 ? C_('#9a6a3a') : C_('#5e3418')) : mixA(col, C_('#c89a5a'), .45);
+      if (cavHere && !filled && o.cav !== 'stain') col = o.liner && o.cav === 'deep' && i > A.xL(44) + 9 ? (hp < .25 ? C_('#e8c860') : C_('#f4de88')) : mixA(C_('#2a1812'), C_('#4a2e22'), Math.max(0, (j - 14) / 40));
+      if (filled) { col = o.cav === 'stain' ? (A.isPulp(i, j) ? col : mixA(col, hp < .18 ? COMPs : COMP, A.isEnamel(i, j) ? .7 : .25)) : hp < .18 ? COMPs : COMP; if (o.cav !== 'stain' && !near(i, j, .9, (a, b) => A.inCav(a, b) && A.cavFill(a, b) || !A.inT(a, b) && !A.inCav(a, b))) col = C_('#ffffff'); }
+    } else if (tissue(i, j)) {
+      const gt = A.gumTop(i), bt = A.boneTop(i);
+      if (j >= bt) { const m = marrow(i, j); col = m < 1.5 ? C_('#dcc294') : m < 2.2 ? C_('#ccac7a') : (hp < .12 ? C_('#e2cea6') : C_('#eedfbe')); if (j < bt + 2.2) col = C_('#f6ead0'); if (near(i, j, 1, A.inRoot)) col = C_('#b47a5e'); }
+      else if (j >= gt) { const v = j - gt; col = mixA(C_('#ee93a0'), C_('#cf6276'), Math.min(1, v / 16)); if (v < 1.2) col = C_('#fbc0c8'); else if (v < 2.4) col = C_('#f6a8b4'); if (near(i, j, 3, A.inT)) col = mixA(col, C_('#a8405a'), .45); }
+    }
+    if (col) put(I, J, col);
+  }
+  x.putImageData(img, 0, 0); return _ta[key] = c;
+}
+
+/* ==== Tampak labial (luar) gigi anterior untuk tambal Komposit/GIC/Veneer (permintaan user 2026-11-17: "bener2 posisi labial ... agar bisa terlihat sisi yang akan ditambalnya").
+ * Potongan labial toothA di atas disimpan untuk PSA (saluran akar terlihat). Mesial kiri, distal kanan, insisal di atas.
+ * o: caries 'shallow'|'deep' (karies proksimal mesial, kelas III) · cav 'deep'|'frac'|'stain' · fill 0..1 · liner · frac (sudut mesio-insisal patah) · stain (mahkota kekuningan). */
+const _tl = {};
+/** Bentuk tampak labial (dipakai gambar & masker minigame). */
+function labShape(o) {
+  o = o || {}; const cx = 85, E = 14, AP = 158;
+  const hw = j => 24 + 2 * Math.sin(Math.min(1, Math.max(0, j - E) / 14) * Math.PI / 2) - 9 * Math.pow(Math.max(0, (j - 30) / 46), 1.4);
+  const xL = j => cx - hw(j), xR = j => cx + hw(j) - 1;
+  const cejY = i => 70 + 7 * Math.max(0, 1 - ((i - cx) / 19) ** 2);
+  const corner = (i, j, x0, r, side) => { const yc = E + r; if (j >= yc) return true; const xc = side < 0 ? x0 + r : x0 - r; if ((side < 0 && i >= xc) || (side > 0 && i <= xc)) return true; return Math.hypot(i - xc, j - yc) <= r; };
+  const crownFull = (i, j) => j >= E && j <= cejY(i) && i >= xL(j) && i <= xR(j) && corner(i, j, xL(E + 3), 3, -1) && corner(i, j, xR(E + 7), 7, 1);
+  const missing = (i, j) => !!o.frac && i + j < cx + 8;
+  const inCrown = (i, j) => crownFull(i, j) && !missing(i, j);
+  const rc = t => cx + 1 + 4 * t * t, rw = t => { const b = 16.5 * Math.pow(1 - t, .75) + .6; return t < .88 ? b : b * Math.sqrt(Math.max(0, 1 - ((t - .88) / .12) ** 2)); };
+  const inRoot = (i, j) => { if (j < 64 || j > AP) return false; const t = (j - 64) / (AP - 64); return Math.abs(i - rc(t)) <= rw(t) && !crownFull(i, j); };
+  const inT = (i, j) => inCrown(i, j) || inRoot(i, j);
+  const deep = o.caries === 'deep' || o.cav === 'deep', ly = 44, lx = () => xL(ly) + 4, rx = deep ? 9 : 6, ry = deep ? 11 : 8;
+  const cq = (i, j, g) => ((i - lx()) / (rx + g)) ** 2 + ((j - ly) / (ry + g)) ** 2;
+  const inCav = (i, j) => { if (!o.cav) return false;
+    if (o.cav === 'stain') return crownFull(i, j) && j <= cejY(i) - 1;
+    if (o.cav === 'frac') return crownFull(i, j) && i + j < cx + 11;
+    return crownFull(i, j) && cq(i, j, 1) < 1; };
+  const cavFill = (i, j) => { const f = o.fill || 0; if (!f) return false;
+    if (o.cav === 'stain') return j >= cejY(i) - 1 - f * (cejY(i) - 1 - E); if (o.cav === 'frac') return i + j >= cx + 11 - f * 22;
+    const R = lx() + rx + 1, L = lx() - rx - 1; return i >= R - f * (R - L); };
+  const gumTop = i => { const e = Math.max(0, Math.abs(i - cx) - 18); return cejY(Math.min(Math.max(i, cx - 18), cx + 18)) - 3 + 10 * (1 - Math.exp(-e / 10)); };
+  const boneTop = i => gumTop(i) + 13;
+  return { cx, E, AP, hw, xL, xR, cejY, crownFull, inCrown, inRoot, inT, missing, rc, rw, cq, lx, ly, rx, ry, inCav, cavFill, gumTop, boneTop };
+}
+/** Gambar tampak labial gigi anterior (cache per opsi & skala). */
+function toothL(o, s) {
+  o = o || {}; s = s || 1; const key = s + '|' + JSON.stringify(o); if (_tl[key]) return _tl[key];
+  const W0 = 170, H0 = 166, W = W0 * s, H = H0 * s, A = labShape(o), cx = A.cx; const [c, x] = cv(W, H); const img = x.createImageData(W, H), D = img.data;
+  const put = (I, J, cc) => { const k = (J * W + I) * 4; D[k] = cc[0]; D[k + 1] = cc[1]; D[k + 2] = cc[2]; D[k + 3] = 255; };
+  const st = 1 / s, near = (i, j, r, f) => { for (let a = -r; a <= r + 1e-6; a += st) for (let b = -r; b <= r + 1e-6; b += st) if (f(i + a, j + b)) return true; return false; };
+  const tissue = (i, j) => j < 104 || ((i - cx) / 84) ** 2 + ((j - 104) / (H0 - 102)) ** 2 < 1.02;
+  const marrow = (i, j) => { let best = 9; const gx = Math.floor(i / 6), gy = Math.floor(j / 6); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { if (hash(gx + a + 11, gy + b + 5) < .35) continue; const px = (gx + a) * 6 + hash(gx + a, gy + b) * 6, py = (gy + b) * 6 + hash(gy + b + 7, gx + a + 3) * 6; const dd = Math.hypot(i - px, j - py); if (dd < best) best = dd; } return best; };
+  const C_ = rgb, EN = C_('#f7f3ea'), ENs = C_('#d6cdbb'), ENhi = C_('#ffffff'), ENb = C_('#dfe6ee'), CERV = C_('#efe0c0'), LINE = C_('#a8987e'),
+    RT = C_('#e6c49a'), RTs = C_('#c49a68'), RThi = C_('#f4dcb8'), RTl = C_('#9a7650'), DEN = C_('#e9cf9c'), COMP = C_('#f3ede0'), COMPs = C_('#e7dfcc'), STN = C_('#d2a24c');
+  for (let J = 0; J < H; J++) for (let I = 0; I < W; I++) {
+    const i = (I + .5) / s - .5, j = (J + .5) / s - .5, d = i - cx, hp = hash(I, J); let col = null;
+    const cavHere = A.inCav(i, j), filled = cavHere && A.cavFill(i, j), gt = A.gumTop(i), bt = A.boneTop(i);
+    if (tissue(i, j) && j >= gt) {
+      if (j >= bt) { const m = marrow(i, j); col = m < 1.5 ? C_('#dcc294') : m < 2.2 ? C_('#ccac7a') : (hp < .12 ? C_('#e2cea6') : C_('#eedfbe')); if (j < bt + 2.2) col = C_('#f6ead0'); }
+      else { const v = j - gt; col = mixA(C_('#ee93a0'), C_('#cf6276'), Math.min(1, v / 14)); if (v < 1.2) col = C_('#fbc0c8'); else if (v < 2.4) col = C_('#f6a8b4'); }
+    }
+    const gum = !!col && j < bt;
+    if (!gum && A.inRoot(i, j) && j >= bt - 2) {
+      const t = (j - 64) / (A.AP - 64), q = (i - A.rc(t)) / Math.max(1, A.rw(t));
+      col = mixA(RT, RTs, Math.min(1, Math.abs(q) ** 2 * .9)); if (Math.abs(q + .35) < .12) col = mixA(col, RThi, .7);
+      if (!near(i, j, 1, A.inRoot)) col = RTl; else if (!near(i, j, 1.6, A.inRoot)) col = mixA(col, C_('#b47a5e'), .6);
+    } else if (!gum && (A.inCrown(i, j) || filled)) {
+      const e = Math.min(i - A.xL(j), A.xR(j) - i, j - A.E + 4);
+      col = EN; if (e < 8) col = mixA(col, ENs, .45 * (1 - e / 8));
+      for (const h of [-9, 8]) col = mixA(col, ENs, .14 * Math.exp(-(((d - h) / 2.2) ** 2)) * Math.min(1, (j - A.E) / 10));
+      if (d > -15 && d < -6 && j > 22 && j < 58) col = mixA(col, ENhi, .55 * Math.sin((d + 15) / 9 * Math.PI));
+      if (j < A.E + 5) col = mixA(col, ENb, .45 * (1 - (j - A.E) / 5));
+      if (j > 52) col = mixA(col, CERV, Math.min(.5, (j - 52) / 40));
+      if (o.stain && !(filled && o.cav === 'stain')) col = mixA(col, STN, .38 + Math.min(.2, Math.max(0, (j - 30) / 150)) + hash(I >> 2, J >> 2) * .08);
+      if (o.caries) { const q = A.cq(i, j, hash(I >> 1, J >> 1) * 1.2); if (q < .35) col = hp < .5 ? C_('#3a2214') : C_('#4a2c18'); else if (q < .75) col = hp < .4 ? C_('#8a5a30') : C_('#6e4422'); else if (q < 1.3) col = mixA(col, C_('#ffffff'), .55); }
+      if (o.frac && !filled) { const fl = i + j - (A.cx + 8); if (fl < 3 && fl >= 0) col = fl < 1 ? EN : hp < .2 ? C_('#dcb886') : DEN; }
+      if (cavHere && !filled) {
+        if (o.cav === 'deep' || o.cav === 'lab') { const q = A.cq(i, j, 1); col = q > .62 ? mixA(DEN, C_('#c49a68'), (1 - q) * 1.4) : o.liner ? (hp < .25 ? C_('#e8c860') : C_('#f4de88')) : mixA(C_('#b88a58'), C_('#8a6440'), hp * .5); if (q > .86) col = C_('#7a5a3a'); }
+        else if (o.cav === 'frac') col = mixA(col, C_('#e2d6be'), .5);
+        else if (o.cav === 'stain') col = mixA(col, C_('#e6d8b8'), .3 + hp * .1); /* permukaan dipreparasi tipis: kusam */
+      }
+      if (filled) { if (o.cav === 'stain') col = mixA(col, hp < .18 ? COMPs : COMP, .35); else { col = mixA(col, hp < .18 ? COMPs : COMP, .85); if ((o.fill || 0) >= 1 && d > -15 && d < -6 && j > 22 && j < 58) col = mixA(col, ENhi, .4); } }
+      if (!near(i, j, 1, (a, b) => A.inCrown(a, b) || A.inCav(a, b) && A.cavFill(a, b))) col = LINE;
+    }
+    if (col) put(I, J, col);
+  }
+  x.putImageData(img, 0, 0); return _tl[key] = c;
+}
+
 /* ---- v3/tanjung.js ---- */
 /* ================= TANJUNG ARUM (Fase 2f, DRAF — menunggu ACC user) =================
    Zona kota pelabuhan 1 layar (480×270, tanpa gulir): halte bus, Bahari Medika, toko ikan, trotoar pelabuhan,
@@ -3758,22 +3914,22 @@ const EVENTS = {
 /** Tindakan T1 sementara (2b): harga wajar dasar GDD §4.1, energi dari minigame/01–09, durasi menit game.
  *  Mulai 2c/2d diganti alur periksa + minigame; bahan = unit stok. */
 const CASES = {
-  konsul: { name: 'Konsultasi', base: 150000, energy: 5, min: 10, stock: 0, says: ['Gigi saya kadang ngilu, Dok. Mau diperiksa saja dulu.', 'Cuma mau cek rutin, Dok. Sudah lama nggak ke dokter gigi.'] },
-  gic: { name: 'Tambal GIC', base: 400000, energy: 12, min: 30, stock: 1, says: ['Ada lubang di geraham, Dok. Ngilu kalau minum es.', 'Gigi saya bolong, sering nyelip makanan.'] },
-  scaling: { name: 'Scaling', base: 600000, energy: 12, min: 30, stock: 1, says: ['Gusi saya sering berdarah waktu sikat gigi.', 'Karang giginya sudah tebal, Dok. Malu kalau senyum.'] },
-  cabut: { name: 'Cabut Gigi Tetap', short: 'Cabut', base: 600000, energy: 14, min: 30, stock: 1, says: ['Gigi saya sudah hancur, Dok. Sakit terus kalau malam.', 'Geraham saya goyang sekali, sudah nggak bisa dipakai makan.'] },
-  cabutSusu: { name: 'Cabut Gigi Susu', short: 'Cabut susu', base: 250000, energy: 10, min: 20, stock: 1, says: ['Gigi susunya goyang, Dok, tapi gigi barunya sudah tumbuh di belakang.', 'Giginya dobel, Dok. Yang lama belum mau copot.'] },
+  konsul: { name: 'Konsultasi', base: 100000, energy: 5, min: 10, stock: 0, says: ['Gigi saya kadang ngilu, Dok. Mau diperiksa saja dulu.', 'Cuma mau cek rutin, Dok. Sudah lama nggak ke dokter gigi.'] },
+  gic: { name: 'Tambal GIC', base: 300000, energy: 12, min: 30, stock: 1, says: ['Ada lubang di geraham, Dok. Ngilu kalau minum es.', 'Gigi saya bolong, sering nyelip makanan.'] },
+  scaling: { name: 'Scaling', base: 400000, energy: 12, min: 30, stock: 1, says: ['Gusi saya sering berdarah waktu sikat gigi.', 'Karang giginya sudah tebal, Dok. Malu kalau senyum.'] },
+  cabut: { name: 'Cabut Gigi Tetap', short: 'Cabut', base: 350000, energy: 14, min: 30, stock: 1, says: ['Gigi saya sudah hancur, Dok. Sakit terus kalau malam.', 'Geraham saya goyang sekali, sudah nggak bisa dipakai makan.'] },
+  cabutSusu: { name: 'Cabut Gigi Susu', short: 'Cabut susu', base: 200000, energy: 10, min: 20, stock: 1, says: ['Gigi susunya goyang, Dok, tapi gigi barunya sudah tumbuh di belakang.', 'Giginya dobel, Dok. Yang lama belum mau copot.'] },
   /** Resep (minigame/02): energi 2, 5 menit, 1 unit stok; tetap boleh saat stok habis (minigame/00 §5). */
-  resep: { name: 'Resep Obat', short: 'Resep', base: 100000, energy: 2, min: 5, stock: 1, always: true, says: ['Gusi saya bengkak, Dok.'] },
+  resep: { name: 'Resep Obat', short: 'Resep', base: 70000, energy: 2, min: 5, stock: 1, always: true, says: ['Gusi saya bengkak, Dok.'] },
   /** [2c-rev] Perawatan pulpa T1 (sebelum PSA ada): kunjungan 1 open akses + devitalisasi + tambalan sementara, kunjungan 2 mumifikasi + GIC. */
-  devital: { name: 'Open akses + devitalisasi', short: 'Devitalisasi', base: 300000, energy: 10, min: 25, stock: 1 },
-  mumi: { name: 'Mumifikasi + tambal GIC', short: 'Mumifikasi + GIC', base: 500000, energy: 12, min: 30, stock: 1 },
+  devital: { name: 'Open akses + devitalisasi', short: 'Devitalisasi', base: 200000, energy: 10, min: 25, stock: 1 },
+  mumi: { name: 'Mumifikasi + tambal GIC', short: 'Mumifikasi + GIC', base: 350000, energy: 12, min: 30, stock: 1 },
   /** [2c-rev] Abses: buka akses untuk drainase + resep. */
-  openRes: { name: 'Open akses + resep', short: 'Akses + resep', base: 350000, energy: 8, min: 20, stock: 1 },
+  openRes: { name: 'Open akses + resep', short: 'Akses + resep', base: 250000, energy: 8, min: 20, stock: 1 },
   /** [2c-rev] Rujuk: pasien membayar tarif konsultasi, tanpa bahan. */
-  rujuk: { name: 'Rujuk', base: 150000, energy: 3, min: 10, stock: 0 },
+  rujuk: { name: 'Rujuk', base: 100000, energy: 3, min: 10, stock: 0 },
   /** [2e] Rontgen periapikal (GDD §4.1 basis 200rb, §6 ③): dipotret di langkah Periksa, ditagih bersama tindakan. */
-  rontgen: { name: 'Rontgen periapikal', short: 'Rontgen', base: 200000, energy: 2, min: 5, stock: 0, stage: 2 },
+  rontgen: { name: 'Rontgen periapikal', short: 'Rontgen', base: 150000, energy: 2, min: 5, stock: 0, stage: 2 },
 };
 /** Urutan tindakan di menu Tarif. */
 const TARIFF_KEYS_ALL = ['konsul', 'rontgen', 'resep', 'scaling', 'gic', 'cabutSusu', 'cabut', 'devital', 'mumi', 'openRes'];
@@ -4147,7 +4303,7 @@ const wdIdx = () => (S.day - 1) % 7;
 /** Jam praktik: hari kerja 08:00–16:00 (GDD §2). */
 const inPracticeHours = () => wdIdx() !== CFG.CLINIC.CLOSED_WD && S.time >= CFG.CLINIC.OPEN_H * 60 && S.time < CFG.CLINIC.CLOSE_H * 60;
 /** Harga wajar = basis × tier alat × musim (GDD §4.1). Tarif pemain menyusul di 2c. */
-const fairPrice = k => Math.round(CASES[k].base * CFG.CLINIC.TIER_MUL * (CASES[k].tier || 1) /* [3b-2] komposit T2 */ * CFG.CLINIC.SEASON_PRICE[season().key] / 50000) * 50000;
+const fairPrice = k => Math.round(CASES[k].base * CFG.CLINIC.TIER_MUL * (CASES[k].tier || 1) /* [3b-2] komposit T2 */ * CFG.CLINIC.SEASON_PRICE[season().key] / 10000) * 10000; /* [3b-2] harga turun ±30% (user 2026-11-17), dibulatkan 10rb */
 /** Tarif pemain (menu Manajemen → Tarif); belum diatur = harga wajar. */
 const tariff = k => S.clinic.tariff[k] != null ? S.clinic.tariff[k] : fairPrice(k);
 /** Pita rasio r = tarif / harga wajar (GDD §4.1). Tiap ★ di atas 3 menggeser batas +0.05 (pasien lebih toleran). */
@@ -4308,12 +4464,13 @@ function spawnPatient(t, tpl) {
       base = { pid: old.pid, name: old.name, g: old.g, body: old.body, L: old.L, ...rc, med: old.med, drug: old.drug, preg1: !!old.preg1, afford: old.afford, back: 'lama' };
     } else {
       const r = Math.random(), body = r < K.KID_P ? 'kid' : r < K.KID_P + K.OLD_P ? 'old' : 'adult', g = Math.random() < 0.5 ? 'P' : 'W';
-      const used = C.patients.map(p => p.name), pool = GUEST_NAMES[body === 'kid' ? 'kid' + g : g].filter(nm => !used.includes(nm));
-      base = { name: pool[Math.floor(Math.random() * pool.length)] || 'Pasien', g, body, L: guestLook(g, body), ...rollCase(body, g) };
+      const used = C.patients.map(p => p.name), pool = GUEST_NAMES[body === 'kid' ? 'kid' + g : g].filter(nm => !used.includes(formalName({ name: nm, g, body }))); /* [3b-2] */
+      base = { name: formalName({ name: pool[Math.floor(Math.random() * pool.length)] || 'Pasien', g, body }), g, body, L: guestLook(g, body), ...rollCase(body, g) };
       base.pid = registerPerson(base);
     }
     const d = DX[base.dx], lines = base.body === 'kid' && d.ks ? d.ks : d.says; base.sayText = pickA(lines);
   }
+  base.name = formalName(base); if (base.pid != null && C.people && C.people[base.pid]) C.people[base.pid].name = base.name; /* [3b-2] sapaan formal */
   const seats = clinicPos().seats, seat = seats.findIndex((s, i) => !q.some(p => p.seat === i)), pos = clinicPos();
   const p = Object.assign(base, { id: C.nextId++, st: 'in', arr: t, until: t + patienceMin(), pat: patienceMin(), seat, x: pos.door[0], y: pos.door[1] + 8, dir: 'U', path: [[pos.door[0], pos.door[1] - 6], seats[seat]] });
   C.patients.push(p); staffUse('resep'); // [2e] Resepsionis melayani pendaftaran
@@ -5761,7 +5918,7 @@ function openBahari() {
         ['Alat Tier 2 · ' + (challengesDone() >= T.T2_CHALLENGES ? 'segera hadir' : 'terkunci (butuh ' + T.T2_CHALLENGES + ' challenge)'), MGC.red, true],
         ['Scaler ultrasonik · Bor high-speed + komposit + LED · Periotome + bius blok · File tangan PSA', MGC.ink2],
         ['Koh Hendra: "Haiya, yang ini nanti dulu. Klinikmu kerja dulu yang rapi, nanti saya kasih harga teman."', MGC.ink]],
-    buttons: () => tab === 'bahan' ? [{ label: 'Alat', fn: () => openRakT2() } /* [3b-2] rak alat T2 */,
+    buttons: () => tab === 'bahan' ? [{ label: 'Alat', fn: () => openRakT2() } /* [3b-2] rak alat T2 */, ...bleachKitBtns() /* [3b-2] kit bleaching */,
       { label: '◀', keep: true, fn: () => { q = Math.max(1, q - 1); } }, { label: '▶', keep: true, fn: () => { q = Math.min(K.PACK_MAX_BUY, q + 1); } },
       { label: 'Beli', off: S.money < q * packPrice(), offMsg: 'Uangmu belum cukup.', fn: () => { S.money -= q * packPrice(); S.clinic.stock += q * K.PACK_UNITS; sfx('coin'); toast('+' + q * K.PACK_UNITS + ' unit bahan · stok ' + S.clinic.stock, 'good'); } },
       { label: 'Tutup', fn: () => {} }]
@@ -7478,7 +7635,7 @@ let MG_BG = null;
 const mgBgImg = () => { if (!MG_BG) { const [c, x] = cv(480, 270); mgBg(x); MG_BG = c; } return MG_BG; };
 
 // ---- Gambar area kerja per tindakan ----
-function artCross(job, o) { workGlow(95, 115, 120); drawLo(toothX(o), 12, 36); }
+function artCross(job, o) { workGlow(95, 115, 120); drawLo(labJob(job) ? toothL(labOpt(job, o)) : toothX(o), 12, 36); } /* [3b-2] gigi depan = tampak labial */
 function artOcc(job, f) {
   workGlow(98, 118, 110); const o = occlusalImg(true, 0), o2 = occlusalImg(true, 1); drawLo(o, 14, 46, 1.5);
   if (f > 0) { hc.save(); hc.beginPath(); hc.rect(14 * HI, 46 * HI, 168 * HI, 147 * f * HI); hc.clip(); drawLo(o2, 14, 46, 1.5); hc.restore(); }
@@ -8046,9 +8203,9 @@ const MG_BUILD = {
     const items = [['cot', 'Kapas', 'cot'], ['etch', 'Etsa', 'etch'], ['cond', 'Kondis', 'cond'], ['irr', 'Bilas', 'irr'], ['liner', 'Pelapik', 'liner'], ['gic', 'GIC', 'gic']];
     return [
       stBius({ art: A({ caries: cav }), warn: deep ? 'Karies dalam' : 'Karies dangkal boleh tanpa bius' }),
-      stGosok({ ...DRILL(), name: 'Bor karies', tool: 'bur', cursor: 'bur', r: 3, speed: 6, set: () => setBor(deep, 1, prox), pain: j => 10 * (deep && j.B < .3 ? 2 : 1), sfx: 'drill_low', soft: { pain: 6 }, hard: (j, st) => mgPerforasi(j, st, 'gic'),
-        leftErr: 'Sisa karies tertinggal', prog: [196, 186, 128, 'Karies'], instr: 'Tahan klik & gosok karies cokelat sampai bersih.', warn: 'Jangan sentuh pulpa',
-        art: () => workGlow(95, 110, 120), over: (j, st) => { hTag('Karies', 214, 50, '#f0a048', ...zp(st, prox ? 52 : 92, prox ? 38 : 30)); hTag('Pulpa', 214, 72, '#ee98a4', ...zp(st, 100, 62)); } }),
+      stGosok({ ...DRILL(), name: 'Bor karies', tool: 'bur', cursor: 'bur', r: 3, speed: 6, set: () => labJob(job) ? setBorL(job) : setBor(deep, 1, prox) /* [3b-2] */, pain: j => 10 * (deep && j.B < .3 ? 2 : 1), sfx: 'drill_low', soft: { pain: 6 }, hard: (j, st) => mgPerforasi(j, st, 'gic'),
+        leftErr: 'Sisa karies tertinggal', prog: [196, 186, 128, 'Karies'], instr: 'Tahan klik & gosok karies cokelat sampai bersih.', warn: labJob(job) ? 'Jaga email yang sehat' : 'Jangan sentuh pulpa',
+        art: () => workGlow(95, 110, 120), over: (j, st) => { if (labJob(j)) { labTags(j, st); return; } /* [3b-2] */ hTag('Karies', 214, 50, '#f0a048', ...zp(st, prox ? 52 : 92, prox ? 38 : 30)); hTag('Pulpa', 214, 72, '#ee98a4', ...zp(st, 100, 62)); } }),
       stSeq('Siapkan kavitas', [
         stUrut({ tool: 'cond', items, seq: () => ['cot', 'cond', 'irr'], bad: { etch: 'Etsa fosfat dipakai pada GIC' }, extra: [], label: 'Siapkan kavitas', instr: 'Klik bahan di baki sesuai urutan kerja.', art: A({ cav }) }),
         stTahan({ tool: 'dry', label: 'Keringkan', za: .3, z: .35, at: [196, 166, 130], labels: ['BASAH', 'LEMBAP', 'KERING'], sfxLoop: 'air_water', instr: 'Tahan untuk meniup udara, lepas di zona lembap.', warn: 'Terlalu kering = ngilu', art: A({ cav }),
@@ -8296,7 +8453,7 @@ function practicePatient(sc, body, riw) {
     const m = c.length ? pickA(c) : pickA(['hipertensi', 'diabetes', 'jantung']); if (m === 'hamil') g = 'W'; if (m === 'alergi') drug = m; else med = m;
   }
   const pool = GUEST_NAMES[kid ? 'kid' + g : g], tooth = d.region ? (Array.isArray(d.region) ? pickA(d.region) : null) : pickA(kid ? d.kidTeeth : d.teeth);
-  const p = { name: pickA(pool), g, body, L: guestLook(g, body), kase: d.tx, dx: sc.dx, tooth, med, drug, afford: 0, medOk: true, id: S.clinic.nextId++, st: 'chair', sayText: (kid && d.ks ? pickA(d.ks) : d.says ? pickA(d.says) : null) || d.ctlSay || '' };
+  const p = { name: formalName({ name: pickA(pool), g, body }) /* [3b-2] */, g, body, L: guestLook(g, body), kase: d.tx, dx: sc.dx, tooth, med, drug, afford: 0, medOk: true, id: S.clinic.nextId++, st: 'chair', sayText: (kid && d.ks ? pickA(d.ks) : d.says ? pickA(d.says) : null) || d.ctlSay || '' };
   p.pid = registerPerson(p); if (riw === 'known' && (med || drug)) examOf(p).asked = ['riwayat', 'obat'];
   return p;
 }
@@ -10883,35 +11040,70 @@ function openRakT2() {
     } });
 }
 
-/* ---- Tambal Komposit ---- */
-const T_FRONT = [11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43];
-CASES.komposit = { name: 'Tambal Komposit', short: 'Komposit', base: 650000, energy: 15, min: 35, stock: 1, t2: 'hs', tier: CFG.ALAT_T2.KOMP_TIER,
-  says: ['Gigi depan saya ada yang hitam, Dok. Malu kalau senyum.', 'Gigi depan saya bolong kecil, Dok.'] };
-TARIFF_KEYS_ALL.splice(TARIFF_KEYS_ALL.indexOf('gic') + 1, 0, 'komposit');
-DX.kariesA = { name: 'Karies gigi depan', tx: 'komposit', teeth: T_FRONT, adult: true, t2: 'hs',
+/* ---- Tambal Komposit (gigi belakang) & Komposit Veneer (gigi depan, estetik) ----
+ * Harga wajar akhir (Musim Hujan): Komposit 500rb, Veneer 800rb (user 2026-11-17). Pengali T2 ×1,6 tetap di rumus,
+ * jadi basis = harga akhir / 1,6. Kemarau ×1,1 seperti tindakan lain. */
+const T_FRONT = [11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43], T_FRONT_UP = [11, 12, 21, 22];
+CASES.komposit = { name: 'Tambal Komposit', short: 'Komposit', base: 500000 / CFG.ALAT_T2.KOMP_TIER, energy: 15, min: 35, stock: 1, t2: 'hs', tier: CFG.ALAT_T2.KOMP_TIER,
+  says: ['Ada lubang di geraham, Dok. Mau ditambal yang warnanya sama gigi.', 'Gigi belakang saya bolong, Dok.'] };
+CASES.veneer = { name: 'Komposit Veneer', short: 'Veneer', base: 800000 / CFG.ALAT_T2.KOMP_TIER, energy: 15, min: 40, stock: 1, t2: 'hs', tier: CFG.ALAT_T2.KOMP_TIER,
+  says: ['Gigi depan saya patah, Dok, habis jatuh.', 'Gigi depan saya kekuningan, Dok. Malu kalau senyum.'] };
+TARIFF_KEYS_ALL.splice(TARIFF_KEYS_ALL.indexOf('gic') + 1, 0, 'komposit', 'veneer');
+/** Kasus gigi depan (estetik) → Komposit Veneer. Muncul setelah bor high-speed terpasang. */
+DX.kariesA = { name: 'Karies gigi depan', tx: 'veneer', teeth: T_FRONT, adult: true, t2: 'hs',
   says: ['Gigi depan saya ada yang hitam, Dok. Malu kalau senyum.', 'Gigi depan saya bolong kecil, Dok. Kalau minum dingin ngilu.'],
   a: { keluhan: 'Yang hitam {loc}, Dok.', sejak: 'Sudah beberapa bulan, makin kelihatan.', kapan: 'Kadang ngilu kalau minum dingin. Sebentar saja.', bengkak: 'Nggak ada bengkak.', gusi: 'Nggak.' },
   f: { kaca: 'Lubang kecil di gigi depan, sonde nyangkut', dingin: 'Ngilu, cepat hilang' },
-  opts: [{ tx: 'komposit', g: 'ideal' }, { tx: 'gic', g: 'ok' }] };
+  opts: [{ tx: 'veneer', g: 'ideal' }, { tx: 'gic', g: 'ok' }] };
+DX.fraktur = { name: 'Fraktur gigi depan', tx: 'veneer', teeth: T_FRONT_UP, adult: true, t2: 'hs',
+  says: ['Gigi depan saya patah, Dok. Kemarin jatuh dari motor.', 'Ujung gigi depan saya gompal, Dok, kena gelas.'],
+  a: { keluhan: 'Yang patah {loc}, Dok.', sejak: 'Dua hari lalu, habis jatuh.', kapan: 'Agak ngilu kalau kena angin. Nggak sakit terus.', bengkak: 'Bibirnya sempat bengkak, sekarang sudah kempis.', gusi: 'Nggak.' },
+  f: { kaca: 'Ujung gigi patah, belum sampai saraf', dingin: 'Sedikit ngilu, cepat hilang', perkusi: 'Tidak sakit' },
+  opts: [{ tx: 'veneer', g: 'ideal' }, { tx: 'gic', g: 'ok' }] };
+DX.diskolor = { name: 'Gigi depan kekuningan', tx: 'veneer', teeth: T_FRONT_UP, adult: true, t2: 'hs',
+  says: ['Gigi depan saya kekuningan, Dok. Malu kalau senyum.', 'Ada bercak di gigi depan saya, Dok. Bisa ditutup?'],
+  a: { keluhan: 'Warnanya {loc}, Dok. Kuning, ada bercaknya.', sejak: 'Dari dulu, tapi makin kelihatan.', kapan: 'Nggak sakit, cuma malu.', bengkak: 'Nggak.', gusi: 'Nggak.' },
+  f: { kaca: 'Bercak kekuningan di permukaan depan, tidak berlubang' },
+  opts: [{ tx: 'veneer', g: 'ideal' }] };
 ['karies', 'kariesP', 'pulpRev'].forEach(k => DX[k].opts.push({ tx: 'komposit', g: 'ideal' }));
 /** Hanya tindakan yang alatnya ada yang muncul di Rencana Perawatan & Tarif. */
-const txAvail = tx => !CASES[tx] || !CASES[tx].t2 || t2Own(CASES[tx].t2);
+const txAvail = tx => (!CASES[tx] || !CASES[tx].t2 || t2Own(CASES[tx].t2)) && (tx !== 'bleaching' || blKit() > 0); /* bleaching butuh kit */
 const dxAvail = k => !DX[k].t2 || t2Own(DX[k].t2);
-/** rollCase: sebagian kasus tambal jadi karies gigi depan setelah bor high-speed terpasang (pasien dewasa). */
-function t2Case(kase, dx, kid) { return kase === 'gic' && !kid && t2Own('hs') && Math.random() < CFG.ALAT_T2.ANT_P ? 'kariesA' : dx; }
+/** rollCase: sebagian kasus tambal dewasa jadi kasus gigi depan (veneer) setelah bor high-speed terpasang. */
+function t2Case(kase, dx, kid) { return kase === 'gic' && !kid && t2Own('hs') && Math.random() < CFG.ALAT_T2.ANT_P ? pickA(Math.random() < CFG.BLEACH.KUNING_P ? ['kuning'] : ['kariesA', 'fraktur', 'diskolor']) : dx; }
 /** Pengubah minigame dari alat T2 (dipanggil di mgJob). */
 function t2JobMods(job) { if ((job.tx === 'cabut' || job.tx === 'cabutSusu') && t2Own('perio')) job.zoneMul *= 1 + CFG.ALAT_T2.PERIO_ZONE; }
 
-MG_TITLE.komposit = 'Tambal Komposit';
-DX_EDU.kariesA = 'karies';
-TRAY.komposit = [['dam', 'Isolasi', 'dam'], ['etch', 'Etsa', 'etch'], ['bond', 'Bonding', 'bond'], ['resin', 'Resin', 'resin'], ['lgt', 'LED', 'lgt'], ['art', 'Kertas', 'art']];
+Object.assign(MG_TITLE, { komposit: 'Tambal Komposit', veneer: 'Komposit Veneer' });
+Object.assign(DX_EDU, { kariesA: 'karies', fraktur: 'sehat', diskolor: 'sehat' });
+TRAY.komposit = TRAY.veneer = [['dam', 'Isolasi', 'dam'], ['etch', 'Etsa', 'etch'], ['bond', 'Bonding', 'bond'], ['resin', 'Resin', 'resin'], ['lgt', 'LED', 'lgt'], ['art', 'Kertas', 'art']];
 Object.assign(ITEM_NAME, { dam: 'isolasi', bond: 'bonding', resin: 'resin', lgt: 'sinar LED' });
 INSTR.komposit = ['Boleh langsung makan, tambalan sudah keras', 'Kurangi kopi & teh 2 hari supaya warnanya awet'];
-const SHADES = [['A1', 'Terang'], ['A2', 'Sedang'], ['A3', 'Agak kuning']];
-MG_BUILD.komposit = job => {
-  job.tray = TRAY.komposit; job.instrKey = 'komposit';
-  const deep = job.deep, prox = job.p.dx === 'kariesP', front = T_FRONT.includes(job.t), cav = prox ? 'prox' : deep ? 'deep' : 'shallow', layers = deep ? 3 : 2;
-  job.shade = Math.floor(Math.random() * 3); job.layer = 0;
+INSTR.veneer = ['Jangan gigit benda keras pakai gigi depan', 'Kurangi kopi, teh & rokok supaya warnanya awet'];
+/** Warna resin (VITA A1–A3): [kode, nama, warna gambar]. */
+const SHADES = [['A1', 'Terang', '#f8f4ea'], ['A2', 'Sedang', '#eedcb4'], ['A3', 'Agak kuning', '#dcc08a']];
+/** Warna gigi asli pasien: muda cenderung A1, dewasa A2, lansia A3 (acak sedikit, tetap per pasien). */
+function patientShade(p) { const h = hash(p.pid || 1, 91); if (p.body === 'old') return h < .8 ? 2 : 1; return h < .2 ? 0 : h < .8 ? 1 : 2; }
+/** Gambar contoh warna berbentuk mahkota gigi depan. */
+function shadeTooth(X, Y, w, h, col) {
+  for (let j = 0; j < h; j++) { const v = j / h, inset = v < .15 ? (1 - v / .15) * w * .18 : v > .8 ? (v - .8) / .2 * w * .12 : 0;
+    hR(X + inset, Y + j, w - inset * 2, 1, mixH(col, '#a89878', v * .35)); }
+  hR(X + w * .22, Y + h * .18, 2, h * .45, 'rgba(255,255,255,.75)'); hR(X, Y + h - 1, w, 1, 'rgba(90,60,30,.5)');
+}
+/** Langkah pilih warna: contoh warna di bawah tiap kartu, gigi sebelah pasien di bawahnya. Nama warna gigi pasien tidak ditulis. */
+const stShade = () => stPick({ name: 'Pilih warna', tool: 'resin', cols: 3, quiet: true, h: 46, title: () => 'Cocokkan warna resin dengan gigi sebelahnya.', instr: 'Cocokkan gigi pasien dengan contoh warna.',
+  cards: () => SHADES.map(([k, d], i) => ({ k: i, t: 'Warna ' + k, d, icon: 'resin' })),
+  art: j => { const X0 = 13, cw = (312 - 12) / 3;
+    SHADES.forEach((s, i) => shadeTooth(X0 + i * (cw + 6) + cw / 2 - 9, 114, 18, 24, s[2]));
+    hR(13, 146, 312, 1, 'rgba(255,220,150,.25)'); HT('Gigi sebelah pasien', 169, 151, MGC.lite2, { align: 'c', sh: DK });
+    shadeTooth(158, 163, 22, 29, SHADES[j.shade][2]); },
+  judge: (j, picks) => { j.shadeOk = picks[0].k === j.shade; if (j.shadeOk && j.p.npc) addTrust(j.p.npc, CFG.ALAT_T2.SHADE_TRUST);
+    toast(j.shadeOk ? 'Warnanya pas dengan gigi sebelah.' : 'Pasien: "Kok warnanya agak beda ya, Dok?"', j.shadeOk ? 'good' : 'bad'); } });
+/** Komposit & veneer: bius → (warna) → bor → isolasi/etsa/bilas → keringkan → bonding → sinar → isi berlapis → gigitan → instruksi. */
+function buildKomposit(job, veneer) {
+  job.tray = TRAY.komposit; job.instrKey = veneer ? 'veneer' : 'komposit';
+  const deep = job.deep, prox = job.p.dx === 'kariesP', front = veneer || T_FRONT.includes(job.t), cav = prox ? 'prox' : deep ? 'deep' : 'shallow', layers = deep ? 3 : 2;
+  job.shade = patientShade(job.p); job.layer = 0;
   const A = o => j => artCross(j, o), fillArt = j => artCross(j, { cav, liner: !!j.liner, fill: Math.min(1, .2 + .8 * j.layer / layers) });
   const items = [['dam', 'Isolasi', 'dam'], ['liner', 'Pelapik', 'liner'], ['etch', 'Etsa', 'etch'], ['irr', 'Bilas', 'irr'], ['bond', 'Bonding', 'bond'], ['cot', 'Kapas', 'cot']];
   const layerSteps = [];
@@ -10920,27 +11112,194 @@ MG_BUILD.komposit = job => {
       over: j => mgErr(j, 'minor', 'Lapisan resin lebih dari 2 mm') }),
     stTepat({ tool: 'lgt', n: 1, z: .3, label: 'Sinar LED', instr: 'Tekan saat penanda di zona hijau untuk menyinari.', warn: 'Meleset = lapisan lunak',
       end: (j, miss) => { j.layer++; if (miss) mgErr(j, 'minor', 'Sinar LED meleset, lapisan lunak'); }, art: fillArt }));
+  const dxk = job.p.dx, prepName = dxk === 'fraktur' ? 'Rapikan patahan' : dxk === 'diskolor' ? 'Preparasi tipis' : 'Bor high-speed';
   return [
-    stBius({ art: A({ caries: cav }), warn: deep ? 'Karies dalam' : 'Karies dangkal boleh tanpa bius' }),
-    front && stPick({ name: 'Pilih warna', tool: 'resin', cols: 3, quiet: true, h: 60, title: j => 'Gigi sebelahnya ' + SHADES[j.shade][1].toLowerCase() + '. Pilih warna resin.', instr: 'Pilih warna resin yang sama dengan gigi sebelahnya.',
-      cards: () => SHADES.map(([k, d], i) => ({ k: i, t: 'Warna ' + k, d, icon: 'resin' })),
-      judge: (j, picks) => { j.shadeOk = picks[0].k === j.shade; if (j.shadeOk && j.p.npc) addTrust(j.p.npc, CFG.ALAT_T2.SHADE_TRUST);
-        toast(j.shadeOk ? 'Warnanya pas dengan gigi sebelah.' : 'Pasien: "Kok warnanya agak beda ya, Dok?"', j.shadeOk ? 'good' : 'bad'); } }),
-    stGosok({ ...DRILL(), name: 'Bor high-speed', tool: 'bur', cursor: 'bur', r: 3, speed: 9, set: () => setBor(deep, 1, prox), pain: j => 10 * (deep && j.B < .3 ? 2 : 1), sfx: 'drill_low', soft: { pain: 5 }, hard: (j, st) => mgPerforasi(j, st, 'gic'),
-      leftErr: 'Sisa karies tertinggal', prog: [196, 186, 128, 'Karies'], instr: 'Tahan klik & gosok karies sampai bersih. Bor high-speed lebih cepat.', warn: 'Jangan sentuh pulpa',
-      art: () => workGlow(95, 110, 120), over: (j, st) => { hTag('Karies', 214, 50, '#f0a048', ...zp(st, prox ? 52 : 92, prox ? 38 : 30)); hTag('Pulpa', 214, 72, '#ee98a4', ...zp(st, 100, 62)); } }),
+    stBius({ art: A({ caries: cav }), warn: deep ? 'Karies dalam' : veneer ? 'Preparasi tipis boleh tanpa bius' : 'Karies dangkal boleh tanpa bius' }),
+    front && stShade(),
+    stGosok({ ...DRILL(), name: prepName, tool: 'bur', cursor: 'bur', r: 3, speed: 9, set: () => labJob(job) ? setBorL(job) : setBor(deep, 1, prox), pain: j => 10 * (deep && j.B < .3 ? 2 : 1), sfx: 'drill_low', soft: { pain: 5 }, hard: (j, st) => mgPerforasi(j, st, 'gic'),
+      leftErr: veneer ? 'Permukaan belum rata' : 'Sisa karies tertinggal', prog: [196, 186, 128, veneer ? 'Preparasi' : 'Karies'], instr: 'Tahan klik & gosok sampai bersih. Bor high-speed lebih cepat.', warn: labJob(job) ? 'Jaga email yang sehat' : 'Jangan sentuh pulpa',
+      art: () => workGlow(95, 110, 120), over: (j, st) => { if (labJob(j)) { labTags(j, st); return; } hTag(veneer ? 'Email' : 'Karies', 214, 50, '#f0a048', ...zp(st, prox ? 52 : 92, prox ? 38 : 30)); hTag('Pulpa', 214, 72, '#ee98a4', ...zp(st, 100, 62)); } }),
     stSeq('Isolasi + bonding', [
       stUrut({ tool: 'dam', items, seq: () => deep ? ['dam', 'liner', 'etch', 'irr'] : ['dam', 'etch', 'irr'], extra: ['liner'], label: 'Isolasi & etsa', instr: 'Pasang isolasi, lalu etsa dan bilas.',
         skipText: m => m.includes('dam') ? 'Tanpa isolasi: bonding tercemar ludah' : 'Langkah terlewat: ' + m.map(x => ITEM_NAME[x] || x).join(', '),
         on: (j, id) => { if (id === 'liner') j.liner = true; if (id === 'etch') sfx('etch_brush'); }, art: j => artCross(j, { cav, liner: !!j.liner }) }),
       stTahan({ tool: 'dry', label: 'Keringkan', za: .3, z: .35, at: [196, 166, 130], labels: ['BASAH', 'LEMBAP', 'KERING'], sfxLoop: 'air_water', instr: 'Tahan untuk meniup udara, lepas di zona lembap.', warn: 'Terlalu kering = ngilu', art: A({ cav }),
         over: j => mgErr(j, 'minor', 'Kavitas terlalu kering') }),
-      stUrut({ tool: 'bond', items, seq: () => ['bond'], bad: { irr: 'Bonding dibilas sebelum disinar' }, label: 'Oles bonding', instr: 'Oles bonding ke seluruh kavitas.', on: () => sfx('etch_brush'), art: j => artCross(j, { cav, liner: !!j.liner }) }),
+      stUrut({ tool: 'bond', items, seq: () => ['bond'], bad: { irr: 'Bonding dibilas sebelum disinar' }, label: 'Oles bonding', instr: 'Oles bonding ke seluruh permukaan.', on: () => sfx('etch_brush'), art: j => artCross(j, { cav, liner: !!j.liner }) }),
       stTepat({ tool: 'lgt', n: 1, z: .3, label: 'Sinar bonding', instr: 'Tekan saat penanda di zona hijau untuk menyinari bonding.', warn: 'Meleset = bonding lunak',
         end: (j, miss) => { if (miss) mgErr(j, 'minor', 'Bonding tidak tersinar sempurna'); }, art: j => artCross(j, { cav, liner: !!j.liner }) })]),
-    stSeq('Isi berlapis', layerSteps),
+    stSeq(veneer ? 'Bentuk berlapis' : 'Isi berlapis', layerSteps),
     stGigit(() => 1 + (Math.random() < .5 ? 1 : 0)),
-    stInstr('komposit')].filter(Boolean); /* gigi belakang: tanpa langkah pilih warna */
+    stInstr(job.instrKey)].filter(Boolean); /* gigi belakang: tanpa langkah pilih warna */
+}
+MG_BUILD.komposit = job => buildKomposit(job, false);
+MG_BUILD.veneer = job => buildKomposit(job, true);
+
+/* ==== [3b-2] Gigi depan tampak labial di minigame tambal (ACC user 2026-11-17). Gambar: toothL/labShape di design/v3/src/anterior.js. ==== */
+/** Tambal GIC/Komposit/Veneer pada gigi depan memakai gambar tampak labial (perawatan lain tetap potongan). */
+const labJob = job => !!job && ['gic', 'komposit', 'veneer'].includes(job.tx) && T_FRONT.includes(job.t);
+/** Opsi gambar potongan geraham → opsi tampak labial sesuai diagnosis gigi depan. */
+function labOpt(job, o) {
+  o = o || {}; const dx = job.p.dx, r = {};
+  if (dx === 'fraktur') { r.frac = 1; if (o.cav) r.cav = 'frac'; }
+  else if (dx === 'diskolor') { r.stain = 1; if (o.cav) r.cav = 'stain'; }
+  else { if (o.caries) r.caries = o.caries === 'shallow' ? 'shallow' : 'deep'; if (o.cav) r.cav = o.cav === 'shallow' ? 'lab' : 'deep'; }
+  if (o.liner) r.liner = 1; if (o.fill) r.fill = o.fill; return r;
+}
+/** Set GOSOK preparasi gigi depan: target = karies/patahan/permukaan berubah warna; email sehat di luar target = ngilu (tanpa perforasi). */
+function setBorL(job, s = 1) {
+  const dx = job.p.dx, deep = !!job.deep, key = 'borL' + dx + deep + s; if (MGI[key]) return MGI[key];
+  const pre = labOpt(job, { caries: deep ? 'deep' : 'shallow' }), post = labOpt(job, { cav: deep ? 'deep' : 'shallow' });
+  const base = toothL(pre, s), aft = toothL(post, s), w = base.width, h = base.height, B = idata(base).data, F = idata(aft).data, H0 = idata(toothL({}, s)).data, L = labShape(pre);
+  const n = w * h, target = new Uint8Array(n), bad = new Uint8Array(n);
+  for (let k = 0; k < n; k++) { const i = bc(k % w, s), j = bc((k / w) | 0, s); if (!L.inCrown(i, j)) continue;
+    if (pxDiff(B, F, k) || (!pre.frac && !pre.stain && pxDiff(B, H0, k))) target[k] = 1; else bad[k] = 1; }
+  const before = recolor(cloneCv(base), target, (i, j, c) => pre.caries ? mixA(c, [150, 92, 44], .25) : null);
+  return MGI[key] = { before, after: aft, target, bad, ox: 12, oy: 36, k: 1, make2: s === 1 ? () => setBorL(job, 2) : null };
+}
+/** Label area kerja gigi depan (pengganti label Karies/Pulpa potongan geraham). */
+function labTags(job, st) {
+  const dx = job.p.dx, L = labShape({});
+  if (dx === 'fraktur') hTag('Patahan', 214, 50, '#f0a048', ...zp(st, 72, 24));
+  else if (dx === 'diskolor') hTag('Email kuning', 214, 50, '#f0a048', ...zp(st, 85, 44));
+  else hTag('Karies', 214, 50, '#f0a048', ...zp(st, L.lx(), L.ly));
+}
+
+/* ---- src/pasien3b.js ---- */
+/* ==== [3b-2] Sapaan formal pasien (permintaan user 2026-11-17) ====
+ * Anak "An. Nama" · pria dewasa/lansia "Tn. Nama" · wanita belum menikah "Nn. Nama" · wanita menikah/lansia "Ny. Nama".
+ * Status menikah dibaca dari sapaan lama: Bu/Mbah/Nenek = sudah menikah, Mbak/Kak = belum; pasangan pemain selalu Ny. */
+const PAS_PREFIX = /^(Pak|Bu|Mas|Mbak|Dik|Kak|Mbah|Kakek|Nenek|Coach|Om|Tante|Koh|Ci|Bang|Ipda|dr\.|drg\.|An\.|Tn\.|Nn\.|Ny\.)\s+/;
+/** Nama formal rekam medis untuk pasien p ({name, g, body, npc}). Idempoten: nama yang sudah formal tidak berubah. */
+function formalName(p) {
+  const raw = String(p.name || 'Pasien'); if (/^(An|Tn|Nn|Ny)\. /.test(raw)) return raw;
+  const m = raw.match(PAS_PREFIX), pre = m ? m[1] : '', bare = m ? raw.slice(m[0].length) : raw;
+  const W = p.g === 'W' || /^(Bu|Mbak|Kak|Mbah|Nenek|Tante|Ci)$/.test(pre) && p.g !== 'P' || pre === 'Nenek';
+  if (p.body === 'kid') return 'An. ' + bare;
+  if (!W) return 'Tn. ' + bare;
+  const wed = p.body === 'old' || /^(Bu|Mbah|Nenek|Tante)$/.test(pre) || (p.npc && typeof spouse === 'function' && spouse() === p.npc);
+  return (wed ? 'Ny. ' : 'Nn. ') + bare;
+}
+
+/* ---- src/bleach3b.js ---- */
+/* ==== [3b-2] Bleaching (usulan & ACC user 2026-11-17) ====
+ * Kasus "Gigi kuning menyeluruh" → Bleaching (ideal) / Veneer (cukup). Butuh LED dari paket Bor High-speed (hs) + Kit Bleaching dari Bahari Medika.
+ * Minigame: tata letak scaling (4 panel, 8 gigi depan): pelindung gusi → oles gel → sinar LED → sedot gel → instruksi.
+ * Draf ACC: design/v3/bleaching.html (bukti fase3b2-draf-09). */
+CFG.BLEACH = { BASE: 1000000 /* [3b] harga wajar akhir Musim Hujan */, KIT_PRICE: 400000 /* [3b] */, KIT_USES: 4 /* [3b] pasien per kit */, KUNING_P: 0.25 /* [3b] bagian kasus gigi depan */,
+  LED_N: 2 /* [3b] */, GUM_LIMIT: 3 /* [3b] gel kena gusi boleh 3× */ };
+const blKit = () => (t2St().kit || 0);
+CASES.bleaching = { name: 'Bleaching', short: 'Bleaching', base: CFG.BLEACH.BASE / CFG.ALAT_T2.KOMP_TIER, energy: 14, min: 45, stock: 0, t2: 'hs', tier: CFG.ALAT_T2.KOMP_TIER,
+  says: ['Gigi saya kuning semua, Dok. Bisa diputihkan?', 'Mau putihin gigi, Dok. Mau foto prewedding.'] };
+TARIFF_KEYS_ALL.splice(TARIFF_KEYS_ALL.indexOf('veneer') + 1, 0, 'bleaching');
+DX.kuning = { name: 'Gigi kuning menyeluruh', tx: 'bleaching', region: T_FRONT_UP, adult: true, t2: 'hs',
+  says: ['Gigi saya kuning semua, Dok. Kebanyakan ngopi kayaknya.', 'Gigi saya kok kusam ya, Dok. Pengin lebih putih.'],
+  a: { keluhan: 'Semua gigi depan kuning, Dok. Nggak ada yang bolong.', sejak: 'Lama, pelan-pelan makin kuning.', kapan: 'Nggak sakit, cuma kurang pede.', bengkak: 'Nggak.', gusi: 'Nggak.' },
+  f: { kaca: 'Seluruh gigi depan kekuningan merata, tidak berlubang', dingin: 'Normal' },
+  opts: [{ tx: 'bleaching', g: 'ideal' }, { tx: 'veneer', g: 'ok' }] };
+Object.assign(MG_TITLE, { bleaching: 'Bleaching' });
+Object.assign(DX_EDU, { kuning: 'sehat' });
+TRAY.bleaching = [['bar', 'Barier', 'dam'], ['gel', 'Gel', 'etch'], ['lgt', 'LED', 'lgt'], ['suc', 'Sedot', 'irr']];
+Object.assign(ITEM_NAME, { bar: 'pelindung gusi', gel: 'gel bleaching', suc: 'sedot' });
+INSTR.bleaching = ['Hindari kopi, teh & rokok 48 jam', 'Ngilu 1-2 hari itu wajar, akan hilang sendiri'];
+
+/** Tombol Kit Bleaching di Bahari Medika (muncul setelah LED/high-speed terpasang). */
+function bleachKitBtns() {
+  if (!t2Own('hs')) return [];
+  const B = CFG.BLEACH, p = Math.round(B.KIT_PRICE * (1 - t2Disc()) / 1000) * 1000;
+  return [{ label: 'Kit', fn: () => dialog(['Kit Bleaching isi ' + B.KIT_USES + ' pasien, ' + rupiah(p) + '. Stok di klinik ' + blKit() + ' pasien.'], { speaker: 'Koh Hendra', choices: [
+    { label: 'Beli', fn: () => { if (S.money < p) { sfx('ui_deny'); toast('Uangmu belum cukup.', 'bad'); return; } S.money -= p; t2St().kit = blKit() + B.KIT_USES; sfx('coin'); toast('+' + B.KIT_USES + ' bleaching · stok kit ' + blKit(), 'good'); } },
+    { label: 'Nanti saja', fn: () => {} }] }) }];
+}
+
+/** Panel 4 kuadran gigi depan (seperti setScaling) + peta gigi kerja. */
+function blBase() {
+  if (MGI.blBase) return MGI.blBase;
+  const W = 318, H = 152, [c, x] = cv(W, H), zones = new Uint8Array(W * H), panels = [];
+  for (let k = 0; k < 4; k++) {
+    const u = k < 2, [pc, px] = cv(151, 55), g = px.createLinearGradient(0, 0, 0, 55); g.addColorStop(0, '#3a1218'); g.addColorStop(1, '#1e080c'); px.fillStyle = g; px.fillRect(0, 0, 151, 55);
+    const tx = []; for (let i = 0; i < 5; i++) { const tX = 5 + i * 29; tx.push([tX + 13, 26]); frontTooth(px, tX, u ? 7 : 3, 26, 46, { lower: !u }); }
+    gumBand(px, 0, u ? 0 : 31, 151, 24, tx, u);
+    const ox = 3 + (k % 2) * 161, oy = 3 + Math.floor(k / 2) * 78; x.drawImage(pc, ox, oy); panels.push({ ox, oy, u, tx });
+    for (let j = 0; j < 55; j++) for (let i = 0; i < 151; i++) zones[(oy + j) * W + ox + i] = k + 1;
+  }
+  const D = idata(c).data, n = W * H, gum = new Uint8Array(n), tooth = new Uint8Array(n), work = new Int16Array(n).fill(-1), bar = new Int16Array(n).fill(-1);
+  for (let q = 0; q < n; q++) { if (!zones[q]) continue; const r = D[q * 4], g = D[q * 4 + 1], b = D[q * 4 + 2]; if (r > 170 && r - g > 45) gum[q] = 1; else if (r > 185 && g > 170 && b > 135) tooth[q] = 1; }
+  const workTooth = (k, ti) => k % 2 === 0 ? ti >= 3 : ti <= 1;
+  let id = 0; panels.forEach((P, k) => P.tx.forEach(([tc], ti) => { if (!workTooth(k, ti)) return; for (let j = 0; j < 55; j++) for (let X = P.ox + tc - 13; X <= P.ox + tc + 13; X++) { const q = (P.oy + j) * W + X; if (tooth[q]) work[q] = id; } id++; }));
+  for (let q = 0; q < n; q++) if (gum[q]) { const i = q % W, j = (q / W) | 0; for (let b = -3; b <= 3 && bar[q] < 0; b++) for (let a = -1; a <= 1; a++) { const r = (j + b) * W + i + a; if (r >= 0 && r < n && work[r] >= 0) { bar[q] = work[r]; break; } } }
+  return MGI.blBase = { c, W, H, gum, tooth, work, bar, zones, nTooth: id };
+}
+/** Gambar keadaan: yel (kuning) · bar (+pelindung) · gel (+gel) · white (putih + pelindung). */
+function blImg(st) {
+  const key = 'blImg' + st; if (MGI[key]) return MGI[key];
+  const B = blBase(), c = cloneCv(B.c), x = c.getContext('2d'), d = x.getImageData(0, 0, B.W, B.H), D = d.data;
+  const get = q => [D[q * 4], D[q * 4 + 1], D[q * 4 + 2]], set = (q, v) => { D[q * 4] = v[0]; D[q * 4 + 1] = v[1]; D[q * 4 + 2] = v[2]; };
+  for (let q = 0; q < B.W * B.H; q++) {
+    if (B.tooth[q]) { const w = B.work[q] >= 0;
+      if (st === 'white' && w) set(q, mixA(get(q), [255, 253, 246], .25)); else set(q, mixA(get(q), [212, 168, 86], w ? .42 : .3));
+      if (st === 'gel' && w) { set(q, mixA(get(q), [96, 206, 176], .5)); if (hash(q % B.W, (q / B.W) | 0) < .04) set(q, [214, 255, 240]); } }
+    if (st !== 'yel' && B.bar[q] >= 0) set(q, hash(q % B.W, (q / B.W) | 0) < .15 ? [150, 210, 255] : [62, 132, 210]);
+  }
+  x.putImageData(d, 0, 0); return MGI[key] = c;
+}
+/** Set klik per gigi untuk langkah kind: bar (garis gusi) · gel (oles) · suc (sedot). Format sama dengan setScaling (chunks). */
+function setBleach(kind) {
+  const key = 'blSet' + kind; if (MGI[key]) return MGI[key];
+  const B = blBase(), n = B.W * B.H, map = kind === 'bar' ? B.bar : B.work, target = new Uint8Array(n), chunk = new Int16Array(n), bad = kind === 'gel' ? new Uint8Array(n) : null, chunks = [];
+  for (let i = 0; i < B.nTooth; i++) chunks.push({ id: i + 1, x0: 1e9, y0: 1e9, x1: -1, y1: -1 });
+  for (let q = 0; q < n; q++) { const t = map[q]; if (t >= 0) { target[q] = 1; chunk[q] = t + 1; const c = chunks[t], X = q % B.W, Y = (q / B.W) | 0; c.x0 = Math.min(c.x0, X); c.x1 = Math.max(c.x1, X); c.y0 = Math.min(c.y0, Y); c.y1 = Math.max(c.y1, Y); }
+    else if (bad && B.gum[q] && B.bar[q] < 0) bad[q] = 1; }
+  const pair = { bar: ['yel', 'bar'], gel: ['bar', 'gel'], suc: ['gel', 'white'] }[kind];
+  return MGI[key] = { before: blImg(pair[0]), after: blImg(pair[1]), target, bad, ox: 10, oy: 43, k: 1, zones: B.zones, chunk, chunks };
+}
+/** Langkah klik per gigi (pola stKarang): klik gigi/garis gusi untuk memasang. Gusi tanpa pelindung kena gel = sakit. */
+function stBleach(o) {
+  const s = { ...info(o), code: 'PILIH', key: o.key,
+    enter(job, st) { const set = setBleach(o.kind); gosokInit(st, set, 1, 1); st.ch = set.chunks.map(c => ({ ...c, done: false })); st.chunk = set.chunk; st.softN = 0; st.marks = []; },
+    take(job, st, c) {
+      const g = st.g; c.done = true; for (let q = 0; q < st.chunk.length; q++) if (st.chunk[q] === c.id && g.hp[q] > 0) { g.hp[q] = 0; for (let z = 0; z < 4; z++) g.cur.data[q * 4 + z] = g.aft.data[q * 4 + z]; g.left--; if (g.zones) g.zl[g.zones[q]]--; }
+      g.x.putImageData(g.cur, 0, 0); st.pop = { x: (c.x0 + c.x1) / 2 + g.ox, y: (c.y0 + c.y1) / 2 + g.oy, t: st.t };
+      if (o.kind === 'bar') (job.blBar = job.blBar || {})[c.id] = 1;
+      if (o.kind === 'gel' && !(job.blBar || {})[c.id] && !job.blBurn) { job.blBurn = true; mgHurt(job, 8); mgErr(job, 'minor', 'Gel mengenai gusi tanpa pelindung'); }
+    },
+    near: (st, x, y) => st.ch.find(q => !q.done && x >= q.x0 - 3 && x <= q.x1 + 3 && y >= q.y0 - 3 && y <= q.y1 + 3),
+    update(job, st) {
+      const c = input.click; if (inWork(c)) {
+        const g = st.g, x = c.x - g.ox, y = c.y - g.oy, h = s.near(st, x, y);
+        if (h) { s.take(job, st, h); sfx(o.sfx || 'etch_brush'); sfx('mg_hit', st.ch.filter(q => q.done).length); }
+        else if (g.bad && x >= 0 && y >= 0 && x < g.w && y < g.h && g.bad[y * g.w + x]) { st.softN++; st.marks.push([c.x, c.y]); mgHurt(job, 4); sfx('mg_miss'); job.misses++; if (st.softN === CFG.BLEACH.GUM_LIMIT + 1) mgErr(job, 'minor', 'Gel bleaching kena gusi'); }
+        else sfx('ui_tick');
+      }
+      if (st.ch.every(q => q.done)) { if (o.done) o.done(job, st); fin(st); }
+    },
+    buttons: (job, st) => [{ label: 'Selesai', off: st.ch.filter(q => q.done).length < st.ch.length / 2, offMsg: 'Kerjakan dulu lebih dari separuh gigi.', fn: () => { if (st.doneAt != null) return; mgErr(job, 'minor', o.leftErr); job.misses++; if (o.done) o.done(job, st); fin(st); } }],
+    auto(job, st, good) { st.ch.forEach(c => { if (!c.done) s.take(job, st, c); }); if (!good) mgErr(job, 'minor', o.leftErr); if (o.done) o.done(job, st); fin(st); },
+    draw(job, st) {
+      artScaling(job, st); const g = st.g; hc.drawImage(g.c, Math.round(g.ox * HI), Math.round(g.oy * HI), g.w * HI, g.h * HI);
+      const m = input.mouse, hh = job.phase === 'play' && s.near(st, m.x - g.ox, m.y - g.oy);
+      if (hh) { const X = hh.x0 + g.ox - 1.5, Y = hh.y0 + g.oy - 1.5, W2 = hh.x1 - hh.x0 + 4, H2 = hh.y1 - hh.y0 + 4; hR(X, Y, W2, .5, '#ffffff'); hR(X, Y + H2 - .5, W2, .5, '#ffffff'); hR(X, Y, .5, H2, '#ffffff'); hR(X + W2 - .5, Y, .5, H2, '#ffffff'); }
+      st.marks.forEach(([mx, my]) => { hR(mx - 1, my - 1, 2, 2, '#d8202a'); hR(mx - .5, my + 1, 1, 1.5, '#a8101a'); });
+      if (st.pop && st.t - st.pop.t < .35) { const f = (st.t - st.pop.t) / .35; for (let i = 0; i < 6; i++) { const an = i * 1.05; hR(st.pop.x + Math.cos(an) * 8 * f, st.pop.y + Math.sin(an) * 6 * f - 6 * f, 1.5, 1.5, o.pop || '#9ad6ff'); } }
+    } };
+  return s;
+}
+/** Bleaching: pelindung gusi → oles gel → sinar LED → sedot gel → instruksi. Satu kit dipakai di awal tindakan. */
+MG_BUILD.bleaching = job => {
+  job.tray = TRAY.bleaching; job.instrKey = 'bleaching';
+  if (job.mode === 'proc' && blKit() > 0) t2St().kit = blKit() - 1;
+  const shadeFrom = 'A3', art = img => j => artScaling(j, null, blImg(img));
+  return [
+    stBleach({ name: 'Pelindung gusi', tool: 'dam', kind: 'bar', key: 'klik garis gusi tiap gigi', sfx: 'fill_press', pop: '#9ad6ff', leftErr: 'Pelindung gusi belum lengkap',
+      instr: 'Klik garis gusi tiap gigi untuk memasang pelindung biru.', warn: 'Tanpa pelindung = gusi terbakar' }),
+    stBleach({ name: 'Oles gel', tool: 'etch', kind: 'gel', key: 'klik tiap gigi', sfx: 'etch_brush', pop: '#a8f0d8', leftErr: 'Gel belum rata di semua gigi',
+      instr: 'Klik tiap gigi kuning untuk mengoles gel bleaching.', warn: 'Kena gusi = sakit' }),
+    stTepat({ name: 'Sinar LED', tool: 'lgt', n: CFG.BLEACH.LED_N, z: .3, label: 'Sinar LED', instr: 'Tekan saat penanda di zona hijau untuk mengaktifkan gel.', warn: 'Meleset = gel kurang aktif',
+      end: (j, miss) => { if (miss) mgErr(j, 'minor', 'Gel kurang aktif, hasil kurang putih'); }, art: art('gel') }),
+    stBleach({ name: 'Sedot gel', tool: 'irr', kind: 'suc', key: 'klik tiap gigi', sfx: 'air_water', pop: '#ffffff', leftErr: 'Sisa gel tertinggal di gigi',
+      instr: 'Klik tiap gigi untuk menyedot gel.', warn: 'Gel tersisa = ngilu',
+      done: j => toast('Warna gigi ' + shadeFrom + ' jadi ' + (j.errors.length ? 'A2' : 'A1'), 'good') }),
+    stInstr('bleaching')];
 };
  // [3a] tools/build-game.cjs menyisipkan src/npc-data.js + src/npc3a.js di sini
 
@@ -10990,7 +11349,7 @@ window.SR = {
   rel: { gift: openGift, give: giveGift, shop: openGiftShop, card: eventCard, choice: eventChoice, dialog, st: relSt, add: addRel, ready: relReady, janji: relJanji, play: (id, n) => playEvent(id, { n }), finish: (id, n, v) => finishEvent(id, evOf(id, n), v), talkRel: relTalk, lineOk: relLineOk, taste: tasteOf, list: giftList, toast: relToast }, // [3a-4] pengait uji
   nikah: NIKAH_SR, // [3a-5] pengait uji
   hang: { open: openHang, run: doHang, hadir: hangHadir, block: hangBlock, fokusMul: () => fokusMul(), kinds: () => hangKinds() }, // [3a-3] pengait uji
-  jr: JR_TEST, /* [3b-1] */ at2: { open: openRakT2, own: t2Own, st: t2St, newDay: t2NewDay, items: T2_ITEMS }, /* [3b-2] */ npc: { act: npcAct, now: npcNow, place: npcPlaceAt, route: npcRoute, sync: npcSync, talk: talkNpc, book: openBook, pick: pickLine, trust: addTrust, where: npcWhereText, segs: npcSegs, hireStaff, roster: NPC_ROSTER,
+  jr: JR_TEST, /* [3b-1] */ at2: { open: openRakT2, own: t2Own, st: t2St, newDay: t2NewDay, items: T2_ITEMS, kit: bleachKitBtns /* [3b-2] */ }, /* [3b-2] */ npc: { act: npcAct, now: npcNow, place: npcPlaceAt, route: npcRoute, sync: npcSync, talk: talkNpc, book: openBook, pick: pickLine, trust: addTrust, where: npcWhereText, segs: npcSegs, hireStaff, roster: NPC_ROSTER,
     scene: pendingScene, play: playScene, sikap: sikapPages, wargaDay, wargaVisit, wargaCands, consentT: trustConsent, care: careTrust, once: trustOnce, win: wargaWin, mark: npcMark, seedPrice, friendDisc }, // [3a] pengait uji (+ [3a-2])
   openGarden, openSeedShop, openBuild, gardenNewDay, gardenResize, gardenRefresh, plantStage, houseNewDay, newDay, payRent, currentAction: () => currentAction(), // [2g] pengait uji
   stars: () => stars(), repFromOld, opsNewDay, opsTick, openRepair, brokenBlocks, openDesk, meanGap: () => meanGap(), // [rev] pengait uji

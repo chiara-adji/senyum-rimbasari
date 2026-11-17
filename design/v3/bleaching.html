@@ -1,0 +1,15 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Senyum Rimbasari · DRAF bleaching</title>
+<style>body{margin:0;background:#2a1c14;color:#f4e6c8;font:14px sans-serif;padding:16px}h1{font-size:18px;margin:0 0 4px}p{margin:0 0 12px;color:#d8c09a}
+.g{display:flex;flex-wrap:wrap;gap:12px}.c{background:#3a2a1e;padding:8px;border-radius:6px}canvas{image-rendering:pixelated;display:block;background:#1a120c}</style></head>
+<body><h1>DRAF 3b-2 · Minigame Bleaching (tata letak = scaling)</h1>
+<p>4 panel gigi depan, 8 gigi kerja. Langkah: cek warna awal → pasang pelindung gusi (klik garis gusi tiap gigi) → oles gel (klik tiap gigi) → tunggu + sinar LED → sedot gel (klik tiap gigi) → cek warna akhir → instruksi.</p>
+<div class="g" id="g"></div>
+<script src="src/base1.js"></script><script src="src/font.js"></script><script src="src/base2.js"></script><script src="src/mini.js"></script><script src="src/bleach-draf.js"></script>
+<script>
+const L = [['1 · Gigi kuning (sebelum)', () => blState('kuning')], ['2 · Pelindung gusi terpasang (biru)', () => blState('pelindung')],
+  ['3 · Gel bleaching diolesi (baru 5 dari 8 gigi)', () => blState('gel', true)], ['4 · Gel penuh, siap ditunggu + disinar', () => blState('gel')], ['5 · Gel disedot: gigi lebih putih', () => blState('selesai')]];
+const g = document.getElementById('g');
+for (const [t, f] of L) { const d = document.createElement('div'); d.className = 'c'; let c; try { c = f(); } catch (e) { c = document.createElement('div'); c.textContent = 'ERR ' + e.message; }
+  if (c.tagName === 'CANVAS') { const big = document.createElement('canvas'); big.width = c.width * 2; big.height = c.height * 2; const bx = big.getContext('2d'); bx.imageSmoothingEnabled = false; bx.drawImage(c, 0, 0, big.width, big.height); d.appendChild(big); } else d.appendChild(c);
+  const s = document.createElement('div'); s.textContent = t; d.appendChild(s); g.appendChild(d); }
+</script></body></html>

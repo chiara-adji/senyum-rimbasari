@@ -237,22 +237,22 @@ const EVENTS = {
 /** Tindakan T1 sementara (2b): harga wajar dasar GDD §4.1, energi dari minigame/01–09, durasi menit game.
  *  Mulai 2c/2d diganti alur periksa + minigame; bahan = unit stok. */
 const CASES = {
-  konsul: { name: 'Konsultasi', base: 150000, energy: 5, min: 10, stock: 0, says: ['Gigi saya kadang ngilu, Dok. Mau diperiksa saja dulu.', 'Cuma mau cek rutin, Dok. Sudah lama nggak ke dokter gigi.'] },
-  gic: { name: 'Tambal GIC', base: 400000, energy: 12, min: 30, stock: 1, says: ['Ada lubang di geraham, Dok. Ngilu kalau minum es.', 'Gigi saya bolong, sering nyelip makanan.'] },
-  scaling: { name: 'Scaling', base: 600000, energy: 12, min: 30, stock: 1, says: ['Gusi saya sering berdarah waktu sikat gigi.', 'Karang giginya sudah tebal, Dok. Malu kalau senyum.'] },
-  cabut: { name: 'Cabut Gigi Tetap', short: 'Cabut', base: 600000, energy: 14, min: 30, stock: 1, says: ['Gigi saya sudah hancur, Dok. Sakit terus kalau malam.', 'Geraham saya goyang sekali, sudah nggak bisa dipakai makan.'] },
-  cabutSusu: { name: 'Cabut Gigi Susu', short: 'Cabut susu', base: 250000, energy: 10, min: 20, stock: 1, says: ['Gigi susunya goyang, Dok, tapi gigi barunya sudah tumbuh di belakang.', 'Giginya dobel, Dok. Yang lama belum mau copot.'] },
+  konsul: { name: 'Konsultasi', base: 100000, energy: 5, min: 10, stock: 0, says: ['Gigi saya kadang ngilu, Dok. Mau diperiksa saja dulu.', 'Cuma mau cek rutin, Dok. Sudah lama nggak ke dokter gigi.'] },
+  gic: { name: 'Tambal GIC', base: 300000, energy: 12, min: 30, stock: 1, says: ['Ada lubang di geraham, Dok. Ngilu kalau minum es.', 'Gigi saya bolong, sering nyelip makanan.'] },
+  scaling: { name: 'Scaling', base: 400000, energy: 12, min: 30, stock: 1, says: ['Gusi saya sering berdarah waktu sikat gigi.', 'Karang giginya sudah tebal, Dok. Malu kalau senyum.'] },
+  cabut: { name: 'Cabut Gigi Tetap', short: 'Cabut', base: 350000, energy: 14, min: 30, stock: 1, says: ['Gigi saya sudah hancur, Dok. Sakit terus kalau malam.', 'Geraham saya goyang sekali, sudah nggak bisa dipakai makan.'] },
+  cabutSusu: { name: 'Cabut Gigi Susu', short: 'Cabut susu', base: 200000, energy: 10, min: 20, stock: 1, says: ['Gigi susunya goyang, Dok, tapi gigi barunya sudah tumbuh di belakang.', 'Giginya dobel, Dok. Yang lama belum mau copot.'] },
   /** Resep (minigame/02): energi 2, 5 menit, 1 unit stok; tetap boleh saat stok habis (minigame/00 §5). */
-  resep: { name: 'Resep Obat', short: 'Resep', base: 100000, energy: 2, min: 5, stock: 1, always: true, says: ['Gusi saya bengkak, Dok.'] },
+  resep: { name: 'Resep Obat', short: 'Resep', base: 70000, energy: 2, min: 5, stock: 1, always: true, says: ['Gusi saya bengkak, Dok.'] },
   /** [2c-rev] Perawatan pulpa T1 (sebelum PSA ada): kunjungan 1 open akses + devitalisasi + tambalan sementara, kunjungan 2 mumifikasi + GIC. */
-  devital: { name: 'Open akses + devitalisasi', short: 'Devitalisasi', base: 300000, energy: 10, min: 25, stock: 1 },
-  mumi: { name: 'Mumifikasi + tambal GIC', short: 'Mumifikasi + GIC', base: 500000, energy: 12, min: 30, stock: 1 },
+  devital: { name: 'Open akses + devitalisasi', short: 'Devitalisasi', base: 200000, energy: 10, min: 25, stock: 1 },
+  mumi: { name: 'Mumifikasi + tambal GIC', short: 'Mumifikasi + GIC', base: 350000, energy: 12, min: 30, stock: 1 },
   /** [2c-rev] Abses: buka akses untuk drainase + resep. */
-  openRes: { name: 'Open akses + resep', short: 'Akses + resep', base: 350000, energy: 8, min: 20, stock: 1 },
+  openRes: { name: 'Open akses + resep', short: 'Akses + resep', base: 250000, energy: 8, min: 20, stock: 1 },
   /** [2c-rev] Rujuk: pasien membayar tarif konsultasi, tanpa bahan. */
-  rujuk: { name: 'Rujuk', base: 150000, energy: 3, min: 10, stock: 0 },
+  rujuk: { name: 'Rujuk', base: 100000, energy: 3, min: 10, stock: 0 },
   /** [2e] Rontgen periapikal (GDD §4.1 basis 200rb, §6 ③): dipotret di langkah Periksa, ditagih bersama tindakan. */
-  rontgen: { name: 'Rontgen periapikal', short: 'Rontgen', base: 200000, energy: 2, min: 5, stock: 0, stage: 2 },
+  rontgen: { name: 'Rontgen periapikal', short: 'Rontgen', base: 150000, energy: 2, min: 5, stock: 0, stage: 2 },
 };
 /** Urutan tindakan di menu Tarif. */
 const TARIFF_KEYS_ALL = ['konsul', 'rontgen', 'resep', 'scaling', 'gic', 'cabutSusu', 'cabut', 'devital', 'mumi', 'openRes'];
@@ -626,7 +626,7 @@ const wdIdx = () => (S.day - 1) % 7;
 /** Jam praktik: hari kerja 08:00–16:00 (GDD §2). */
 const inPracticeHours = () => wdIdx() !== CFG.CLINIC.CLOSED_WD && S.time >= CFG.CLINIC.OPEN_H * 60 && S.time < CFG.CLINIC.CLOSE_H * 60;
 /** Harga wajar = basis × tier alat × musim (GDD §4.1). Tarif pemain menyusul di 2c. */
-const fairPrice = k => Math.round(CASES[k].base * CFG.CLINIC.TIER_MUL * (CASES[k].tier || 1) /* [3b-2] komposit T2 */ * CFG.CLINIC.SEASON_PRICE[season().key] / 50000) * 50000;
+const fairPrice = k => Math.round(CASES[k].base * CFG.CLINIC.TIER_MUL * (CASES[k].tier || 1) /* [3b-2] komposit T2 */ * CFG.CLINIC.SEASON_PRICE[season().key] / 10000) * 10000; /* [3b-2] harga turun ±30% (user 2026-11-17), dibulatkan 10rb */
 /** Tarif pemain (menu Manajemen → Tarif); belum diatur = harga wajar. */
 const tariff = k => S.clinic.tariff[k] != null ? S.clinic.tariff[k] : fairPrice(k);
 /** Pita rasio r = tarif / harga wajar (GDD §4.1). Tiap ★ di atas 3 menggeser batas +0.05 (pasien lebih toleran). */
@@ -787,12 +787,13 @@ function spawnPatient(t, tpl) {
       base = { pid: old.pid, name: old.name, g: old.g, body: old.body, L: old.L, ...rc, med: old.med, drug: old.drug, preg1: !!old.preg1, afford: old.afford, back: 'lama' };
     } else {
       const r = Math.random(), body = r < K.KID_P ? 'kid' : r < K.KID_P + K.OLD_P ? 'old' : 'adult', g = Math.random() < 0.5 ? 'P' : 'W';
-      const used = C.patients.map(p => p.name), pool = GUEST_NAMES[body === 'kid' ? 'kid' + g : g].filter(nm => !used.includes(nm));
-      base = { name: pool[Math.floor(Math.random() * pool.length)] || 'Pasien', g, body, L: guestLook(g, body), ...rollCase(body, g) };
+      const used = C.patients.map(p => p.name), pool = GUEST_NAMES[body === 'kid' ? 'kid' + g : g].filter(nm => !used.includes(formalName({ name: nm, g, body }))); /* [3b-2] */
+      base = { name: formalName({ name: pool[Math.floor(Math.random() * pool.length)] || 'Pasien', g, body }), g, body, L: guestLook(g, body), ...rollCase(body, g) };
       base.pid = registerPerson(base);
     }
     const d = DX[base.dx], lines = base.body === 'kid' && d.ks ? d.ks : d.says; base.sayText = pickA(lines);
   }
+  base.name = formalName(base); if (base.pid != null && C.people && C.people[base.pid]) C.people[base.pid].name = base.name; /* [3b-2] sapaan formal */
   const seats = clinicPos().seats, seat = seats.findIndex((s, i) => !q.some(p => p.seat === i)), pos = clinicPos();
   const p = Object.assign(base, { id: C.nextId++, st: 'in', arr: t, until: t + patienceMin(), pat: patienceMin(), seat, x: pos.door[0], y: pos.door[1] + 8, dir: 'U', path: [[pos.door[0], pos.door[1] - 6], seats[seat]] });
   C.patients.push(p); staffUse('resep'); // [2e] Resepsionis melayani pendaftaran
@@ -2240,7 +2241,7 @@ function openBahari() {
         ['Alat Tier 2 · ' + (challengesDone() >= T.T2_CHALLENGES ? 'segera hadir' : 'terkunci (butuh ' + T.T2_CHALLENGES + ' challenge)'), MGC.red, true],
         ['Scaler ultrasonik · Bor high-speed + komposit + LED · Periotome + bius blok · File tangan PSA', MGC.ink2],
         ['Koh Hendra: "Haiya, yang ini nanti dulu. Klinikmu kerja dulu yang rapi, nanti saya kasih harga teman."', MGC.ink]],
-    buttons: () => tab === 'bahan' ? [{ label: 'Alat', fn: () => openRakT2() } /* [3b-2] rak alat T2 */,
+    buttons: () => tab === 'bahan' ? [{ label: 'Alat', fn: () => openRakT2() } /* [3b-2] rak alat T2 */, ...bleachKitBtns() /* [3b-2] kit bleaching */,
       { label: '◀', keep: true, fn: () => { q = Math.max(1, q - 1); } }, { label: '▶', keep: true, fn: () => { q = Math.min(K.PACK_MAX_BUY, q + 1); } },
       { label: 'Beli', off: S.money < q * packPrice(), offMsg: 'Uangmu belum cukup.', fn: () => { S.money -= q * packPrice(); S.clinic.stock += q * K.PACK_UNITS; sfx('coin'); toast('+' + q * K.PACK_UNITS + ' unit bahan · stok ' + S.clinic.stock, 'good'); } },
       { label: 'Tutup', fn: () => {} }]
@@ -3957,7 +3958,7 @@ let MG_BG = null;
 const mgBgImg = () => { if (!MG_BG) { const [c, x] = cv(480, 270); mgBg(x); MG_BG = c; } return MG_BG; };
 
 // ---- Gambar area kerja per tindakan ----
-function artCross(job, o) { workGlow(95, 115, 120); drawLo(toothX(o), 12, 36); }
+function artCross(job, o) { workGlow(95, 115, 120); drawLo(labJob(job) ? toothL(labOpt(job, o)) : toothX(o), 12, 36); } /* [3b-2] gigi depan = tampak labial */
 function artOcc(job, f) {
   workGlow(98, 118, 110); const o = occlusalImg(true, 0), o2 = occlusalImg(true, 1); drawLo(o, 14, 46, 1.5);
   if (f > 0) { hc.save(); hc.beginPath(); hc.rect(14 * HI, 46 * HI, 168 * HI, 147 * f * HI); hc.clip(); drawLo(o2, 14, 46, 1.5); hc.restore(); }
@@ -4525,9 +4526,9 @@ const MG_BUILD = {
     const items = [['cot', 'Kapas', 'cot'], ['etch', 'Etsa', 'etch'], ['cond', 'Kondis', 'cond'], ['irr', 'Bilas', 'irr'], ['liner', 'Pelapik', 'liner'], ['gic', 'GIC', 'gic']];
     return [
       stBius({ art: A({ caries: cav }), warn: deep ? 'Karies dalam' : 'Karies dangkal boleh tanpa bius' }),
-      stGosok({ ...DRILL(), name: 'Bor karies', tool: 'bur', cursor: 'bur', r: 3, speed: 6, set: () => setBor(deep, 1, prox), pain: j => 10 * (deep && j.B < .3 ? 2 : 1), sfx: 'drill_low', soft: { pain: 6 }, hard: (j, st) => mgPerforasi(j, st, 'gic'),
-        leftErr: 'Sisa karies tertinggal', prog: [196, 186, 128, 'Karies'], instr: 'Tahan klik & gosok karies cokelat sampai bersih.', warn: 'Jangan sentuh pulpa',
-        art: () => workGlow(95, 110, 120), over: (j, st) => { hTag('Karies', 214, 50, '#f0a048', ...zp(st, prox ? 52 : 92, prox ? 38 : 30)); hTag('Pulpa', 214, 72, '#ee98a4', ...zp(st, 100, 62)); } }),
+      stGosok({ ...DRILL(), name: 'Bor karies', tool: 'bur', cursor: 'bur', r: 3, speed: 6, set: () => labJob(job) ? setBorL(job) : setBor(deep, 1, prox) /* [3b-2] */, pain: j => 10 * (deep && j.B < .3 ? 2 : 1), sfx: 'drill_low', soft: { pain: 6 }, hard: (j, st) => mgPerforasi(j, st, 'gic'),
+        leftErr: 'Sisa karies tertinggal', prog: [196, 186, 128, 'Karies'], instr: 'Tahan klik & gosok karies cokelat sampai bersih.', warn: labJob(job) ? 'Jaga email yang sehat' : 'Jangan sentuh pulpa',
+        art: () => workGlow(95, 110, 120), over: (j, st) => { if (labJob(j)) { labTags(j, st); return; } /* [3b-2] */ hTag('Karies', 214, 50, '#f0a048', ...zp(st, prox ? 52 : 92, prox ? 38 : 30)); hTag('Pulpa', 214, 72, '#ee98a4', ...zp(st, 100, 62)); } }),
       stSeq('Siapkan kavitas', [
         stUrut({ tool: 'cond', items, seq: () => ['cot', 'cond', 'irr'], bad: { etch: 'Etsa fosfat dipakai pada GIC' }, extra: [], label: 'Siapkan kavitas', instr: 'Klik bahan di baki sesuai urutan kerja.', art: A({ cav }) }),
         stTahan({ tool: 'dry', label: 'Keringkan', za: .3, z: .35, at: [196, 166, 130], labels: ['BASAH', 'LEMBAP', 'KERING'], sfxLoop: 'air_water', instr: 'Tahan untuk meniup udara, lepas di zona lembap.', warn: 'Terlalu kering = ngilu', art: A({ cav }),
@@ -4775,7 +4776,7 @@ function practicePatient(sc, body, riw) {
     const m = c.length ? pickA(c) : pickA(['hipertensi', 'diabetes', 'jantung']); if (m === 'hamil') g = 'W'; if (m === 'alergi') drug = m; else med = m;
   }
   const pool = GUEST_NAMES[kid ? 'kid' + g : g], tooth = d.region ? (Array.isArray(d.region) ? pickA(d.region) : null) : pickA(kid ? d.kidTeeth : d.teeth);
-  const p = { name: pickA(pool), g, body, L: guestLook(g, body), kase: d.tx, dx: sc.dx, tooth, med, drug, afford: 0, medOk: true, id: S.clinic.nextId++, st: 'chair', sayText: (kid && d.ks ? pickA(d.ks) : d.says ? pickA(d.says) : null) || d.ctlSay || '' };
+  const p = { name: formalName({ name: pickA(pool), g, body }) /* [3b-2] */, g, body, L: guestLook(g, body), kase: d.tx, dx: sc.dx, tooth, med, drug, afford: 0, medOk: true, id: S.clinic.nextId++, st: 'chair', sayText: (kid && d.ks ? pickA(d.ks) : d.says ? pickA(d.says) : null) || d.ctlSay || '' };
   p.pid = registerPerson(p); if (riw === 'known' && (med || drug)) examOf(p).asked = ['riwayat', 'obat'];
   return p;
 }
@@ -4999,7 +5000,7 @@ window.SR = {
   rel: { gift: openGift, give: giveGift, shop: openGiftShop, card: eventCard, choice: eventChoice, dialog, st: relSt, add: addRel, ready: relReady, janji: relJanji, play: (id, n) => playEvent(id, { n }), finish: (id, n, v) => finishEvent(id, evOf(id, n), v), talkRel: relTalk, lineOk: relLineOk, taste: tasteOf, list: giftList, toast: relToast }, // [3a-4] pengait uji
   nikah: NIKAH_SR, // [3a-5] pengait uji
   hang: { open: openHang, run: doHang, hadir: hangHadir, block: hangBlock, fokusMul: () => fokusMul(), kinds: () => hangKinds() }, // [3a-3] pengait uji
-  jr: JR_TEST, /* [3b-1] */ at2: { open: openRakT2, own: t2Own, st: t2St, newDay: t2NewDay, items: T2_ITEMS }, /* [3b-2] */ npc: { act: npcAct, now: npcNow, place: npcPlaceAt, route: npcRoute, sync: npcSync, talk: talkNpc, book: openBook, pick: pickLine, trust: addTrust, where: npcWhereText, segs: npcSegs, hireStaff, roster: NPC_ROSTER,
+  jr: JR_TEST, /* [3b-1] */ at2: { open: openRakT2, own: t2Own, st: t2St, newDay: t2NewDay, items: T2_ITEMS, kit: bleachKitBtns /* [3b-2] */ }, /* [3b-2] */ npc: { act: npcAct, now: npcNow, place: npcPlaceAt, route: npcRoute, sync: npcSync, talk: talkNpc, book: openBook, pick: pickLine, trust: addTrust, where: npcWhereText, segs: npcSegs, hireStaff, roster: NPC_ROSTER,
     scene: pendingScene, play: playScene, sikap: sikapPages, wargaDay, wargaVisit, wargaCands, consentT: trustConsent, care: careTrust, once: trustOnce, win: wargaWin, mark: npcMark, seedPrice, friendDisc }, // [3a] pengait uji (+ [3a-2])
   openGarden, openSeedShop, openBuild, gardenNewDay, gardenResize, gardenRefresh, plantStage, houseNewDay, newDay, payRent, currentAction: () => currentAction(), // [2g] pengait uji
   stars: () => stars(), repFromOld, opsNewDay, opsTick, openRepair, brokenBlocks, openDesk, meanGap: () => meanGap(), // [rev] pengait uji

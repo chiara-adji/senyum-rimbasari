@@ -100,7 +100,7 @@ Manajemen:
 - Setiap ★ di atas 3 menggeser batas toleransi +0.05.
 - Kesulitan kasus menambah biaya otomatis ×1.0 / ×1.3 / ×1.7.
 
-Basis harga wajar (T1): Konsultasi 150rb · Rontgen periapikal 200rb · Rontgen panoramik 450rb · Resep 100rb · Scaling 600rb · Tambal GIC 400rb · Tambal komposit 650rb · Cabut gigi susu 250rb · Cabut gigi tetap 600rb · Cabut sisa akar/bedah minor 1,5jt · PSA (mulai T2) 2,5jt anterior / 3,5jt premolar / 5jt molar.
+Basis harga wajar (T1, revisi user 2026-11-17: turun ±30%, dibulatkan 10rb): Konsultasi 100rb · Rujuk 100rb · Rontgen periapikal 150rb · Rontgen panoramik 300rb · Resep 70rb · Scaling 400rb · Tambal GIC 300rb · Cabut gigi susu 200rb · Cabut gigi tetap 350rb · Devitalisasi 200rb · Mumifikasi + GIC 350rb · Open akses + resep 250rb · Cabut sisa akar/bedah minor 1jt · PSA 1,75jt anterior / 2,5jt premolar / 3,5jt molar (angka PSA/bedah/panoramik: usulan, disetel saat fasenya). Tindakan yang butuh alat T2, harga akhir (sudah termasuk ×1,6): **Tambal Komposit 500rb** (gigi belakang) · **Komposit Veneer 800rb** (gigi depan, estetik). Kemarau ×1,1 untuk semua.
 
 ## 5. Staf
 | Peran | Terbuka | Efek | Gaji/hari |
@@ -159,6 +159,18 @@ Diagnosis benar → bonus. Salah → pasien kembali mengeluh (pemicu konflik kla
 | PSA | — | File tangan | Rotary + apex locator |
 
 Harga alat: T1 2–5jt · T2 8–15jt · T3 20–40jt. Kesulitan kasus naik bersama tahap klinik.
+
+**Alat T2 di game (Fase 3b-2, ACC user 2026-11-17, `src/alat3b.js`)**
+- *Sapaan pasien (revisi user 2026-11-17):* rekam medis & antrian memakai sapaan formal: anak **An. Nama**, pria dewasa/lansia **Tn. Nama**, wanita belum menikah **Nn. Nama**, wanita menikah/lansia **Ny. Nama** (`formalName`, `src/pasien3b.js`).
+- *Potongan gigi minigame:* geraham = potongan geraham (toothR); gigi depan (11–13, 21–23, 31–33, 41–43) untuk Komposit/GIC/Veneer = **tampak labial dari luar** (toothL): karies proksimal kelas III, fraktur sudut insisal kelas IV, diskolor = mahkota kekuningan, veneer menutup permukaan labial. Potongan labial (toothA, saluran akar terlihat) dipakai untuk PSA. ACC user 2026-11-17, terpasang.
+- *Bleaching (draf, usulan user 2026-11-17):* tata letak sama dengan scaling (4 panel, 8 gigi depan): cek warna awal → pelindung gusi (klik garis gusi tiap gigi) → oles gel (klik tiap gigi) → tunggu + sinar LED → sedot gel → cek warna akhir → instruksi (hindari kopi/teh/rokok 48 jam, ngilu sementara wajar). ACC user 2026-11-17, terpasang (`src/bleach3b.js`). Kasus **Gigi kuning menyeluruh** (25% kasus gigi depan setelah bor high-speed): Bleaching ideal, Veneer cukup. Harga wajar Rp 1.000.000 (Kemarau ×1,1). Butuh LED (paket high-speed) + **Kit Bleaching** Rp 400.000 isi 4 pasien di Bahari Medika (diskon teman berlaku); tanpa kit, Bleaching tidak muncul di rencana. Galat minor: pelindung tak lengkap, gel kena gusi tanpa pelindung, gel kena gusi lebih dari 3×, LED meleset, sisa gel.
+- Naik ke **klinik tahap 2** sudah termasuk **scaler ultrasonik + bius blok** (gratis).
+- **Rak T2 Bahari Medika** (tombol Alat, terbuka ≥8 challenge): Bor high-speed + LED + komposit **15jt** (membuka Tambal Komposit) · Periotome **8jt** (cabut: zona sukses +15%) · File tangan PSA **9jt** (baru bisa dibeli di tahap 3, Fase 3b-3). Diskon = harga teman Koh Hendra + imbalan Jurnal #27 (5%, sekali pakai).
+- Beli → konfirmasi Koh Hendra → dikirim lewat Ilham, **terpasang besok pagi** (kabar di kartu pagi).
+- **Tambal Komposit** (500rb): gigi belakang; pilihan di Rencana Perawatan untuk karies, karies proksimal, pulpitis reversibel (setara GIC).
+- **Komposit Veneer** (800rb): estetik gigi depan. Kasus baru (30% kasus tambal dewasa setelah bor high-speed terpasang): **Karies gigi depan** (11–13, 21–23, 31–33, 41–43), **Fraktur gigi depan** (habis jatuh/gompal; 11, 12, 21, 22), **Gigi depan kekuningan** (bercak/kuning; 11, 12, 21, 22). GIC untuk karies/fraktur depan = pilihan "ok".
+- **Pilih warna** (gigi depan): kartu A1 Terang / A2 Sedang / A3 Agak kuning dengan contoh warna, dan gambar gigi sebelah pasien tanpa nama warna. Warna gigi pasien: lansia umumnya A3, lainnya umumnya A2 (sebagian A1/A3). Salah warna bukan kesalahan, pasien berkomentar; cocok = trust NPC +1.
+- Langkah komposit/veneer: bius → pilih warna (gigi depan) → bor high-speed / rapikan patahan / preparasi tipis → isolasi, (pelapik), etsa, bilas → keringkan → bonding → sinar → isi 2–3 lapis (tahan sampai garis 2 mm + sinar LED tiap lapis) → cek gigitan → instruksi pulang.
 
 **Rekam Medis**: odontogram, diagnosis, tindakan, dan jadwal kontrol per pasien.
 

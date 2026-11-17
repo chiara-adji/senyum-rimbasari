@@ -1,7 +1,7 @@
 # 05 — Tambal Komposit
 
 > Status: **ACC 2026-11-11** (angka bertanda [usulan] dipakai sebagai nilai awal, disetel saat playtest) · **Sudah ada di GDD** §6 (Tambal; T2 = high-speed + komposit + LED). Urutan langkah sama persis dengan GDD.
-> Harga wajar 650rb T1 (GDD §4.1), tidak berubah. Karena alat minimumnya T2, harga wajar yang berlaku di game = 650rb × 1.6 (pengali T2) × musim. Aturan umum: `00-aturan-umum.md`.
+> **Revisi harga user 2026-11-17:** harga wajar akhir Tambal Komposit (gigi belakang) **500rb**, **Komposit Veneer** (estetik gigi depan: karies depan, fraktur, kekuningan) **800rb**, sudah termasuk pengali T2; Kemarau ×1,1. Veneer memakai langkah yang sama dengan pilihan warna selalu ada (GDD §6 "Alat T2 di game"). Aturan umum: `00-aturan-umum.md`.
 
 ## 1. Ringkasan
 Tambalan sewarna gigi. Langkahnya lebih banyak daripada GIC dan lebih sensitif pada kebersihan kerja: ludah sedikit saja bisa membuat tambalan bocor. Terbuka setelah pemain punya alat T2 (high-speed + LED).
@@ -53,10 +53,10 @@ GDD §4.1, §5, §6, §7. `03-tambalan-sementara.md` (eugenol), `04-tambal-gic.m
 | Energi | 15 | 12–18 | — |
 
 ## 8. Kriteria lulus
-- [ ] Tidak bisa dipilih tanpa alat T2 (high-speed + LED).
-- [ ] Melewatkan isolasi → hasil Cukup, kontrol berikutnya ada keluhan ngilu.
-- [ ] Lapisan dilepas di atas garis 2 mm → dihitung kesalahan kecil.
-- [ ] Gigi depan menampilkan pilihan warna. Gigi belakang tidak.
+- [x] Tidak bisa dipilih tanpa alat T2 (high-speed + LED). (Fase 3b-2)
+- [ ] Melewatkan isolasi → hasil Cukup (sudah), kontrol berikutnya ada keluhan ngilu (belum).
+- [x] Lapisan dilepas di atas garis 2 mm → dihitung kesalahan kecil.
+- [x] Gigi depan menampilkan pilihan warna. Gigi belakang tidak.
 
 ## Sumber
 - Dental Economics, prosedur penempatan & finishing komposit: https://dentaleconomics.com/science-tech/restorative-dentistry/article/55331641/best-procedures-for-placing-and-finishing-dental-composites

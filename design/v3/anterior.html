@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Senyum Rimbasari · DRAF gigi anterior</title>
+<style>body{margin:0;background:#2a1c14;color:#f4e6c8;font:14px sans-serif;padding:16px}h1{font-size:18px;margin:0 0 4px}p{margin:0 0 12px;color:#d8c09a}
+.g{display:flex;flex-wrap:wrap;gap:12px}.c{background:#3a2a1e;padding:8px;border-radius:6px;text-align:center}canvas{image-rendering:pixelated;display:block;background:#1a120c}</style></head>
+<body><h1>DRAF 3b-2 · Gigi anterior: tampak labial (tambal) + potongan labial (PSA)</h1>
+<p>Tampak labial dari luar untuk Komposit / GIC / Veneer: sisi yang ditambal terlihat. Mesial kiri, distal kanan, insisal di atas. Dua terakhir: potongan labial, disimpan untuk PSA (saluran akar terlihat).</p>
+<div class="g" id="g"></div>
+<script src="src/base1.js"></script><script src="src/font.js"></script><script src="src/base2.js"></script><script src="src/mini.js"></script><script src="src/anterior.js"></script>
+<script>
+const L = [['Posterior (geraham) · pembanding', () => toothR({}, 2)], ['Labial · sehat', () => toothL({}, 2)], ['Labial · karies proksimal dangkal', () => toothL({ caries: 'shallow' }, 2)], ['Labial · karies proksimal dalam', () => toothL({ caries: 'deep' }, 2)],
+  ['Labial · kavitas dibor', () => toothL({ cav: 'deep' }, 2)], ['Labial · kavitas + liner', () => toothL({ cav: 'deep', liner: 1 }, 2)], ['Labial · isi komposit 50%', () => toothL({ cav: 'deep', fill: .5 }, 2)], ['Labial · komposit selesai', () => toothL({ cav: 'deep', fill: 1 }, 2)],
+  ['Labial · fraktur sudut insisal', () => toothL({ frac: 1 }, 2)], ['Labial · fraktur dibangun 50%', () => toothL({ frac: 1, cav: 'frac', fill: .5 }, 2)], ['Labial · fraktur selesai', () => toothL({ frac: 1, cav: 'frac', fill: 1 }, 2)], ['Labial · diskolor kuning', () => toothL({ stain: 1 }, 2)],
+  ['Labial · veneer 50%', () => toothL({ stain: 1, cav: 'stain', fill: .5 }, 2)], ['Labial · veneer selesai', () => toothL({ stain: 1, cav: 'stain', fill: 1 }, 2)], ['PSA · potongan labial', () => toothA({}, 2)], ['PSA · karies dalam', () => toothA({ caries: 'deep' }, 2)]];
+const g = document.getElementById('g');
+for (const [t, f] of L) { const d = document.createElement('div'); d.className = 'c'; let c; try { c = f(); } catch (e) { c = document.createElement('div'); c.textContent = 'ERR ' + e.message; }
+  if (c.tagName === 'CANVAS') { const big = document.createElement('canvas'); big.width = c.width; big.height = c.height; big.getContext('2d').drawImage(c, 0, 0); d.appendChild(big); } else d.appendChild(c);
+  const s = document.createElement('div'); s.textContent = t; d.appendChild(s); g.appendChild(d); }
+</script></body></html>
