@@ -155,7 +155,7 @@ const tierName = t => tierOf(t)[1];
 const hashN = (s) => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
 const isRainy = () => season().key === 'hujan';
 /** Staf yang direkrut: peran (resep/perawat) atau null. */
-function staffRoleOf(id) { for (const r of ['resep', 'perawat']) { const st = staffOf(r); if (st && st.id === id) return r; } return null; }
+function staffRoleOf(id) { for (const r of Object.keys(STAFF_ROLES)) /* [3b-3] */ { const st = staffOf(r); if (st && st.id === id) return r; } return null; }
 /** Tempat NPC pada menit t hari ini (kunci tempat), atau null = di rumah/luar kota. */
 function npcPlaceAt(id, t) {
   if (NPC_FROM_STAGE[id] && S.clinicStage < NPC_FROM_STAGE[id] && !staffRoleOf(id)) return null;
@@ -294,7 +294,7 @@ function spotOf(id, p) {
   if (I.room) {
     const w = getRoom(I.room), fix = (NPC_ROOMSPOT[p] || {})[id];
     if (fix) { const s = navSnap(w, fix[0], fix[1]); return { wid: 'r:' + w.key, pt: s, dir: fix[2] }; }
-    if (p === 'klinik') { const role = staffRoleOf(id), pos = clinicPos(), q = pos[role === 'resep' ? 'recep' : 'nurse']; return { wid: 'r:' + w.key, pt: [q[0], q[1]], dir: role === 'resep' ? 'down' : 'L', fixed: true }; }
+    if (p === 'klinik') { const q = k3StaffSpot(staffRoleOf(id), clinicPos()); return { wid: 'r:' + w.key, pt: [q.pt[0], q.pt[1]], dir: q.dir, fixed: true }; } /* [3b-3] */
     const g = navGrid(w), r = hashN(id + p), r2 = hashN(p + id);
     const F = w.fh - w.floorTop, x = 30 + r * (w.w - 60), y = w.floorTop + F * 0.5 + r2 * Math.max(8, F * 0.5 - 36); // pengunjung: setengah depan ruangan (bukan di balik etalase)
     return { wid: 'r:' + w.key, pt: navSnap(w, x, y), dir: 'down' };

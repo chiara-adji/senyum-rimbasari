@@ -34,12 +34,13 @@ function t2Status(it) {
   if (it[5] === 'bawaan') return S.clinicStage >= 2 ? 'ok' : 'tahap2';
   if (T.own[it[0]]) return 'ok'; if (T.ship[it[0]]) return 'kirim';
   if (it[5] === 'tahap3' && S.clinicStage < 3) return 'tahap3';
+  if (it[5] && t2Item(it[5]) && !T.own[it[5]]) return 'perlu'; /* [3b-3] */
   return null;
 }
 
 /** Panel rak alat T2 di Bahari Medika (tombol Alat). Klik tombol kartu = beli, dengan konfirmasi Koh Hendra. */
 function openRakT2() {
-  const W = 384, H = 252, X = 240 - W / 2, Y = 9, n = T2_ITEMS.length;
+  const n = T2_ITEMS.length, W = 384, H = n > 4 ? 262 : 252, X = 240 - W / 2, Y = n > 4 ? 4 : 9, RH = n > 4 ? 36 : 41, CH = RH - 4, TY = n > 4 ? [3, 13, 23, 6] : [5, 16, 27, 8]; /* [3b-3] */
   openOverlay({ kind: 'rakT2', sel: 1, t: 0,
     update() {
       this.t++;
@@ -51,7 +52,7 @@ function openRakT2() {
     buy() {
       const it = T2_ITEMS[this.sel], st = t2Status(it), p = t2Price(it);
       const why = t2Locked() ? 'Rak T2 terbuka setelah ' + CFG.TRIP.T2_CHALLENGES + ' challenge.' : st === 'ok' ? 'Sudah terpasang di klinik.' : st === 'kirim' ? 'Sedang dikirim, terpasang besok pagi.'
-        : st === 'tahap2' ? 'Ikut gratis saat klinik naik ke tahap 2.' : st === 'tahap3' ? 'Butuh klinik tahap 3.' : S.money < p ? 'Uangmu belum cukup.' : null;
+        : st === 'tahap2' ? 'Ikut gratis saat klinik naik ke tahap 2.' : st === 'tahap3' ? 'Butuh klinik tahap 3.' : st === 'perlu' ? 'Beli dulu ' + t2Item(it[5])[1] + '.' /* [3b-3] */ : S.money < p ? 'Uangmu belum cukup.' : null;
       if (why) { sfx('ui_deny'); toast(why, 'bad'); return; }
       closeOverlay(() => dialog(['Beli ' + it[1] + ' seharga ' + rupiah(p) + '?'], { speaker: 'Koh Hendra', choices: [
         { label: 'Beli', fn: () => { S.money -= p; t2St().ship[it[0]] = S.day + 1; if (jrF('t2disc')) S.jr.f.t2disc = false; sfx('coin');
@@ -68,26 +69,26 @@ function openRakT2() {
         hDivider(X + 14, Y + 42, W - 28);
         const hv = hoverId();
         T2_ITEMS.forEach((it, i) => {
-          const cy = Y + 49 + i * 41, cx = X + 12, cw = W - 24, st = t2Status(it), s = i === this.sel && !lock;
+          const cy = Y + 49 + i * RH, /* [3b-3] */ cx = X + 12, cw = W - 24, st = t2Status(it), s = i === this.sel && !lock;
           if (hv === 'at' + i && !lock) this.sel = i;
-          hInset(cx, cy, cw, 37, st === 'ok' ? '#e4efd0' : '#f6e4b8');
-          if (s) hGlow(cx, cy, cw, 37);
-          hInset(cx + 5, cy + 5, 27, 27, null, true); toolIcon({ icon: it[2] }, cx + 10.5, cy + 10.5);
-          HT(it[1], cx + 38, cy + 5, MGC.ink, { bold: true });
-          HT(fitText(it[4], 244), cx + 38, cy + 16, MGC.ink2);
+          hInset(cx, cy, cw, CH, st === 'ok' /* [3b-3] */ ? '#e4efd0' : '#f6e4b8');
+          if (s) hGlow(cx, cy, cw, CH); /* [3b-3] */
+          hInset(cx + 5, cy + (CH - 27) / 2, 27, 27, null, true); toolIcon({ icon: it[2] }, cx + 10.5, cy + (CH - 27) / 2 + 5.5); /* [3b-3] */
+          HT(it[1], cx + 38, cy + TY[0], MGC.ink, { bold: true }); /* [3b-3] */
+          HT(fitText(it[4], 244), cx + 38, cy + TY[1], MGC.ink2); /* [3b-3] */
           const p = t2Price(it);
-          if (st === 'ok' || st === 'kirim') HT('Milikmu', cx + 38, cy + 27, '#2e6a34', { bold: true });
-          else if (it[5] === 'bawaan') HT('Gratis', cx + 38, cy + 27, '#2e6a34', { bold: true });
-          else if (p < it[3]) { const w0 = HT(rupiah(it[3]), cx + 38, cy + 27, '#9a7a5a'); hR(cx + 38, cy + 30.5, w0, 1, '#9a7a5a'); HT(rupiah(p), cx + 44 + w0, cy + 27, '#2e6a34', { bold: true }); }
-          else HT(rupiah(p), cx + 38, cy + 27, MGC.ink, { bold: true });
-          const lb = { ok: 'Terpasang', kirim: 'Dikirim', tahap2: 'Tahap 2', tahap3: 'Tahap 3' }[st] || 'Beli', off = !!st || lock;
-          const bx = cx + cw - 70, by = cy + 8;
+          if (st === 'ok' || st === 'kirim') HT('Milikmu', cx + 38, cy + TY[2], '#2e6a34', { bold: true });
+          else if (it[5] === 'bawaan') HT('Gratis', cx + 38, cy + TY[2], '#2e6a34', { bold: true });
+          else if (p < it[3]) { const w0 = HT(rupiah(it[3]), cx + 38, cy + TY[2], '#9a7a5a'); hR(cx + 38, cy + TY[2] + 3.5, w0, 1, '#9a7a5a'); HT(rupiah(p), cx + 44 + w0, cy + TY[2], '#2e6a34', { bold: true }); }
+          else HT(rupiah(p), cx + 38, cy + TY[2], MGC.ink, { bold: true });
+          const lb = { ok: 'Terpasang', kirim: 'Dikirim', tahap2: 'Tahap 2', tahap3: 'Tahap 3', perlu: 'Terkunci' }[st] /* [3b-3] */ || 'Beli', off = !!st || lock;
+          const bx = cx + cw - 70, by = cy + TY[3]; /* [3b-3] */
           hBtn(bx, by, 64, 21, lb, { on: s && !off, kind: off ? 'dark' : s ? null : 'paper', bold: true });
           if (off) { hc.fillStyle = 'rgba(70,50,30,.35)'; hc.fillRect(Math.round(bx * HI), Math.round(by * HI), 64 * HI, 21 * HI); }
           clickable(bx, by, 64, 21, () => {}, 'at' + i);
         });
         if (lock) {
-          hc.fillStyle = 'rgba(60,36,16,.55)'; hc.fillRect(Math.round((X + 10) * HI), Math.round((Y + 47) * HI), Math.round((W - 20) * HI), 166 * HI);
+          hc.fillStyle = 'rgba(60,36,16,.55)'; hc.fillRect(Math.round((X + 10) * HI), Math.round((Y + 47) * HI), Math.round((W - 20) * HI), (n * RH + 2) * HI); /* [3b-3] */
           hBox(X + 62, Y + 98, W - 124, 60, 'dark', { thin: true });
           HT('Rak terkunci', 240, Y + 106, MGC.lite, { k: 4, align: 'c', sh: DK });
           HT('Selesaikan ' + CFG.TRIP.T2_CHALLENGES + ' challenge · sekarang ' + challengesDone() + '/' + CFG.TRIP.T2_CHALLENGES, 240, Y + 128, '#ffd86a', { align: 'c', sh: DK });

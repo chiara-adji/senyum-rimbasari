@@ -4,11 +4,11 @@
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..');
 const V3 = path.join(ROOT, 'design', 'v3', 'src');
-const order = ['base1', 'font', 'base2', 'char', 'cast', 'base3', 'furni', 'furni2', 'build', 'rooms', 'world', 'mini', 'anterior' /* [3b-2] */, 'tanjung', 'makan', 'kebun', 'npc', 'nikah']; // [3a-5] nikah = Emas Lina, Toserba, Tanjung Arum lebar, Balai Kota pernikahan
+const order = ['base1', 'font', 'base2', 'char', 'cast', 'base3', 'furni', 'furni2', 'build', 'rooms', 'world', 'mini', 'anterior' /* [3b-2] */, 'psa' /* [3b-3] */, 'tanjung', 'makan', 'kebun', 'npc', 'nikah']; // [3a-5] nikah = Emas Lina, Toserba, Tanjung Arum lebar, Balai Kota pernikahan
 const lib = order.map(n => '/* ---- v3/' + n + '.js ---- */\n' + fs.readFileSync(path.join(V3, n + '.js'), 'utf8')).join('\n');
 // [3a] dialog harian Buku NPC → src/npc-data.js, lalu data + mesin NPC disisipkan ke dalam IIFE game di penanda include npc
 require('./gen-npc-data.cjs');
-const npcSrc = ['npc-data.js', 'npc3a.js', 'trust3a.js', 'nongkrong3a.js', 'hubungan3a.js', 'nikah3a.js' /* [3a-5] */, 'jurnal3b.js' /* [3b-1] */, 'alat3b.js' /* [3b-2] */, 'pasien3b.js' /* [3b-2] */, 'bleach3b.js' /* [3b-2] */].map(f => '/* ---- src/' + f + ' ---- */\n' + fs.readFileSync(path.join(ROOT, 'src', f), 'utf8')).join('\n');
+const npcSrc = ['npc-data.js', 'npc3a.js', 'trust3a.js', 'nongkrong3a.js', 'hubungan3a.js', 'nikah3a.js' /* [3a-5] */, 'jurnal3b.js' /* [3b-1] */, 'alat3b.js' /* [3b-2] */, 'pasien3b.js' /* [3b-2] */, 'bleach3b.js' /* [3b-2] */, 'klinik3b.js' /* [3b-3] */].map(f => '/* ---- src/' + f + ' ---- */\n' + fs.readFileSync(path.join(ROOT, 'src', f), 'utf8')).join('\n');
 let game = fs.readFileSync(path.join(ROOT, 'src', 'game.js'), 'utf8');
 if (!game.includes('/*@include npc*/')) throw new Error('penanda /*@include npc*/ tidak ada di src/game.js');
 game = game.replace('/*@include npc*/', () => npcSrc);

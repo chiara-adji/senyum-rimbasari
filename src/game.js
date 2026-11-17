@@ -671,7 +671,7 @@ const STAFF_INFO = {
 const staffOf = role => (S.staff || {})[role] || null;
 const staffName = id => castBy(id).name;
 /** Staf bekerja hari ini (tahap ≥2, sudah mulai, tidak libur gaji/pelatihan, bukan hari Minggu). Latihan Minigame tanpa staf. */
-const staffOn = role => { const st = staffOf(role); return !!st && !S.practice && S.clinicStage >= 2 && !st.off && wdIdx() !== CFG.CLINIC.CLOSED_WD; };
+const staffOn = role => { const st = staffOf(role); return !!st && !S.practice && S.clinicStage >= (STAFF_ROLES[role].stage || 2) && !st.off /* [3b-3] */ && wdIdx() !== CFG.CLINIC.CLOSED_WD; };
 const staffTired = role => staffOn(role) && staffOf(role).energy <= 0;
 /** Efek staf: 0 kalau tidak bekerja; 1 + 25% per Skill Lv di atas 1; separuh kalau energinya habis (GDD §5 "melambat"). */
 function staffEff(role) { if (!staffOn(role)) return 0; const T = CFG.STAFF, st = staffOf(role); return (1 + T.SKILL_STEP * (st.skill - 1)) * (st.energy <= 0 ? T.TIRED : 1); }
@@ -732,7 +732,7 @@ function clinicTick() {
   if (!S || S.clinicStage < 1) return;
   const C = S.clinic, K = CFG.CLINIC;
   if (C.open && S.time >= K.CLOSE_H * 60) {
-    C.open = false; const q = queueing(); q.forEach(p => leavePatient(p, null));
+    C.open = false; const q = queueing(); q.forEach(p => leavePatient(p, null)); sterilClose(); /* [3b-3] */
     toast('Pukul 16:00 · klinik tutup' + (q.length ? '. ' + q.length + ' pasien pulang, datang lagi lain hari.' : '.'));
   }
   if (!C.open || !inPracticeHours()) C.nextArr = null;
@@ -744,7 +744,7 @@ function clinicTick() {
     if (C.nextArr == null) C.nextArr = Math.max(S.time, K.OPEN_H * 60) + K.FIRST_ARRIVE[0] + Math.random() * (K.FIRST_ARRIVE[1] - K.FIRST_ARRIVE[0]); while (S.time >= C.nextArr) { spawnPatient(C.nextArr); C.nextArr += nextGap(); } }
   C.patients.filter(p => (p.st === 'in' || p.st === 'wait') && S.time >= p.until).forEach(p => leavePatient(p, 'late'));
   if (!inClinic()) C.patients.slice().forEach(settlePatient);
-  opsTick(); // [rev] alat rusak tiba-tiba / servis kilat selesai
+  rekanTick(); sterilTick(); /* [3b-3] */ opsTick(); // [rev] alat rusak tiba-tiba / servis kilat selesai
 }
 /** Penampilan pasien tamu: parameter char3 diacak (tanpa gambar baru). */
 function guestLook(g, body) {
@@ -761,7 +761,7 @@ function rollCase(body, g) {
   const K = CFG.CLINIC, E = K.EXAM, kid = body === 'kid', kase = pickW(K.CASE_W[kid ? 'kid' : season().key]);
   let dx = pickA(Object.keys(DX).filter(k => DX[k].tx === kase && !DX[k].ctlOnly && !DX[k].minStage && (kid ? DX[k].kid : DX[k].adult))) || 'sehat';
   if (kase === 'gic' && S.clinicStage >= DX.kariesP.minStage && Math.random() < K.XRAY.PROX_P) dx = 'kariesP'; // [2e] karies tersembunyi
-  dx = t2Case(kase, dx, kid); /* [3b-2] karies gigi depan → komposit */
+  dx = t2Case(kase, dx, kid); dx = psaCase(kase, dx, kid); /* [3b-3] */ /* [3b-2] karies gigi depan → komposit */
   const d = DX[dx];
   const tooth = d.region ? (Array.isArray(d.region) ? pickA(d.region) : null) : pickA(kid ? d.kidTeeth : d.teeth);
   let med = null, drug = null;
@@ -841,9 +841,9 @@ function clinicNewDay() {
   const C = S.clinic, K = CFG.CLINIC, news = [];
   if (C.renovDay != null && S.day >= C.renovDay) {
     S.clinicStage = C.renovTo || 1; C.renovDay = null; C.renovTo = null; C.clean = 100;
-    news.push(S.clinicStage === 1 ? 'Renovasi selesai! ' + clinicName() + ' siap dibuka hari ini.' : 'Upgrade selesai! ' + clinicName() + ' punya ruang tunggu dan rontgen periapikal. Staf bisa direkrut di meja praktik.');
+    news.push(S.clinicStage === 3 ? k3UpNews() : S.clinicStage === 1 ? 'Renovasi selesai! ' /* [3b-3] */ + clinicName() + ' siap dibuka hari ini.' : 'Upgrade selesai! ' + clinicName() + ' punya ruang tunggu dan rontgen periapikal. Staf bisa direkrut di meja praktik.');
   }
-  staffNewDay(news); // [2e]
+  staffNewDay(news); k3NewDay(news); /* [3b-3] */
   postNewDay(news); // [2f] pesanan Kantor Pos
   t2NewDay(news); /* [3b-2] alat T2 terpasang */
   opsNewDay(news); // [rev] listrik & air, alat rusak, pajak
@@ -1437,6 +1437,7 @@ function roomDoor(w) {
   return w.door;
 }
 function exitRoom() {
+  if (sterilGuard()) return; /* [3b-3] */
   sfx('door_close');
   fadeTo(() => {
     const d = roomDoor(S.where);
@@ -1892,6 +1893,7 @@ function clinicAction(w) {
     if (next) return { label: 'Panggil · ' + next.name, fn: () => callPatient(next) };
     return { label: 'Kursi dental', fn: () => dialog([C.open ? 'Belum ada pasien di ruang tunggu.' : 'Klinik masih tutup. Buka dulu di meja praktik.']) };
   }
+  { const ak = sterilAct(at); if (ak) return ak; } /* [3b-3] */
   if (at(pos.desk)) return { label: 'Meja praktik · ' + (C.open ? 'buka' : 'tutup'), fn: openDesk };
   if (at(pos.sink) && C.clean < 100) return { label: 'Bersihkan Klinik · ' + Math.round(C.clean) + '%', fn: wipeClinic };
   return null;
@@ -1918,7 +1920,7 @@ function openRenov() {
       { label: 'Nanti', fn: () => {} }] });
 }
 /** [2e] Upgrade Praktik drg. → Klinik Gigi (GDD §4 tahap 2: Rp 60jt + ★2). Tukang 1 hari, selesai besok pagi; klinik tetap bisa buka hari ini. */
-function openUpgrade() {
+function openUpgrade() { if (S.clinicStage + 1 === 3) return openUpgrade3(); /* [3b-3] */
   const C = S.clinic, to = S.clinicStage + 1, U = CFG.CLINIC.UPGRADE[to] && { ...CFG.CLINIC.UPGRADE[to], cost: CFG.CLINIC.UPGRADE[to].cost * nikahCostMul() }; // [3a-5] Arya -50%
   if (C.renovDay != null) return dialog(['Tukang sedang bekerja. Besok pagi ' + 'Klinik Gigi ' + S.name + ' sudah jadi.']);
   const okS = stars() >= U.stars, okM = S.money >= U.cost;
@@ -1936,9 +1938,9 @@ function openUpgrade() {
 }
 /** Buka/tutup klinik di meja praktik. Pasien datang hanya saat buka, di jam praktik. */
 function toggleOpen() {
-  const C = S.clinic, K = CFG.CLINIC;
+  const C = S.clinic, K = CFG.CLINIC; if (k3Renov()) return dialog(['Klinik sedang direnovasi. ' + dayLabel(C.renovDay) + ' pagi baru bisa buka lagi.']); /* [3b-3] */
   if (C.open) return dialog(['Tutup klinik sekarang?' + (queueing().length ? ' Pasien yang menunggu akan pulang.' : '')], { choices: [
-    { label: 'Tutup klinik', fn: () => { C.open = false; queueing().forEach(p => leavePatient(p, null)); sfx('door_close'); toast('Klinik TUTUP'); } }, { label: 'Batal', fn: () => {} }] });
+    { label: 'Tutup klinik', fn: () => { C.open = false; queueing().forEach(p => leavePatient(p, null)); sterilClose(); /* [3b-3] */ sfx('door_close'); toast('Klinik TUTUP'); } }, { label: 'Batal', fn: () => {} }] });
   if (nikahClosed()) return dialog([nikahClosed()]); // [3a-5]
   if (wdIdx() === K.CLOSED_WD) return dialog(['Hari Minggu klinik libur. Istirahat dulu, Dok.']);
   if (S.time >= K.CLOSE_H * 60) return dialog(['Jam praktik hari ini sudah selesai (08:00-16:00). Buka lagi besok pagi.']);
@@ -2053,7 +2055,7 @@ function knownMed(p) {
 /** Peluang pasien menyetujui rencana: 70% × pengali tarif + kemampuan bayar + Trust pasien warga (+5%/tingkat, [3a-2]) (GDD §6 ⑤, §4.1). Konsultasi & rujuk selalu setuju. */
 function consentChance(p, tx) {
   const X = CFG.CLINIC.EXAM; if (tx === 'konsul' || tx === 'rujuk') return 1;
-  return clamp(X.CONSENT_BASE * band(tx).yes + p.afford + trustConsent(p), X.CONSENT_MIN, X.CONSENT_MAX);
+  return clamp(X.CONSENT_BASE * band(tx).yes + p.afford + trustConsent(p) + k3CleanConsent(), /* [3b-3] */ X.CONSENT_MIN, X.CONSENT_MAX);
 }
 const chanceWord = c => c >= 0.7 ? 'Pasien tampak yakin.' : c >= 0.45 ? 'Pasien masih menimbang.' : 'Pasien keberatan dengan biayanya.';
 /** Identitas pasien yang dibawa ke kunjungan berikutnya (kontrol / kembali / rujukan). */
@@ -2067,7 +2069,7 @@ function referTarget(p, dxKey) {
 }
 /** Rencana kunjungan kontrol setelah tindakan bertahap. */
 const NEXT_TEXT = { pulpDevital: 'mumifikasi + tambal GIC, atau rujuk PSA', pascaObat: 'cabut gigi (atau rujuk PSA)', nekrosis: 'cabut gigi atau rujuk PSA setelah bengkaknya kempis' };
-function optNext(dxKey, tx) { const o = DX[dxKey].opts.find(x => x.tx === tx); return o && o.next ? 'Kontrol ' + CFG.CLINIC.EXAM.CONTROL_DAYS + ' hari lagi: ' + NEXT_TEXT[o.next] : ''; }
+function optNext(dxKey, tx) { const o = DX[dxKey].opts.find(x => x.tx === tx); return o && o.next ? 'Kontrol ' + (o.nextDays ? o.nextDays.join('-') : CFG.CLINIC.EXAM.CONTROL_DAYS) + ' hari lagi: ' /* [3b-3] */ + NEXT_TEXT[o.next] : ''; }
 /** Rencana perawatan: pilihan tindakan dari diagnosis (+ Rujuk) → jelaskan & tawarkan. */
 function proposePlan(p, dxKey) {
   const d = DX[dxKey], C = S.clinic, tooth = d.region ? null : examTooth(p), opts = planOpts(dxKey);
@@ -2075,7 +2077,7 @@ function proposePlan(p, dxKey) {
   const short = tx => { const cs = CASES[tx]; return cs.stock > 0 && !cs.always && C.stock < cs.stock; };
   // [2d] tensi tinggi terukur (≥160/100) → tindakan invasif ditunda (minigame/00 §3.5), tinggal resep / rujuk
   const locked = tx => p.med === 'hipertensi' && !p.medOk && !!examOf(p).bp && INVASIVE.includes(tx);
-  const can = tx => { if (brokenBlocks(tx)) { sfx('ui_deny'); toast(brokenBlocks(tx) + ' rusak. Panggil teknisi di meja praktik, atau pilih tindakan lain.', 'bad'); return false; } // [rev]
+  const can = tx => { if (sterilBlocks(tx)) { sfx('ui_deny'); toast('Alat belum steril. Sterilkan dulu di autoklaf.', 'bad'); return false; } /* [3b-3] */ if (brokenBlocks(tx)) { sfx('ui_deny'); toast(brokenBlocks(tx) + ' rusak. Panggil teknisi di meja praktik, atau pilih tindakan lain.', 'bad'); return false; } // [rev]
     if (short(tx)) { sfx('ui_deny'); toast('Stok bahan habis. Beli di Bahari Medika atau pesan lewat Kantor Pos.', 'bad'); return false; } if (locked(tx)) { sfx('ui_deny'); toast('Tensi tinggi: tindakan ini ditunda. Pilih resep atau rujuk.', 'bad'); return false; } return true; };
   const go = () => { const tx = opts[ov.sel]; if (can(tx)) closeOverlay(() => offer(p, dxKey, tooth, tx)); };
   /** [2d] Jelaskan dulu = minigame konsultasi pendek sebelum pasien memutuskan (minigame/01 §1 ①). */
@@ -2100,7 +2102,7 @@ function proposePlan(p, dxKey) {
       hBox(X0 + 12, y, W - 24, 37, s ? 'gold' : 'paper', { thin: true, shadow: false }); if (s || hv === 'plo' + i) hGlow(X0 + 12, y, W - 24, 37);
       HT((s ? '▶ ' : '') + (rj ? 'Rujuk ke ' + referTarget(p, dxKey) : cs.name), X0 + 18, y + 4, MGC.ink, { bold: true });
       HT(rj ? rupiah(tariff('konsul')) + ' (konsultasi)' : rupiah(tariff(tx)) + ' · ' + b.label, X0 + W - 18, y + 4, rj ? MGC.ink2 : b.col, { align: 'r', bold: !rj });
-      if (brokenBlocks(tx)) HT(brokenBlocks(tx) + ' rusak: belum bisa dikerjakan', X0 + 18, y + 15, MGC.red, { bold: true }); else // [rev]
+      if (sterilBlocks(tx)) HT('Alat belum steril: sterilkan dulu', X0 + 18, y + 15, MGC.red, { bold: true }); else /* [3b-3] */ if (brokenBlocks(tx)) HT(brokenBlocks(tx) + ' rusak: belum bisa dikerjakan', X0 + 18, y + 15, MGC.red, { bold: true }); else // [rev]
       HT(rj ? 'Tanpa bahan · ' + cs.min + ' menit' : locked(tx) ? 'Ditunda: tensi ' + examOf(p).bp.split(' ')[0] + ' masih tinggi' : 'Energi -' + cs.energy + ' · ' + cs.min + ' menit · ' + (cs.stock ? 'bahan 1 (stok ' + C.stock + ')' : 'tanpa bahan'), X0 + 18, y + 15, sh || locked(tx) ? MGC.red : MGC.ink2, { bold: sh || locked(tx) });
       HT(rj || tx === 'konsul' ? 'Pasien setuju.' : chanceWord(ch), X0 + W - 18, y + 15, MGC.ink2, { align: 'r' });
       const nx = optNext(dxKey, tx); if (nx) HT(nx, X0 + 18, y + 25, '#2a4a7a');
@@ -2528,13 +2530,13 @@ function startUji() {
   game.trans = { name: 'Mode Uji · ' + clinicName(), sub: 'Klinik tahap 2 · ' + rupiah(S.money), tip: 'Langsung di klinik: buka praktik di meja, rekrut staf, coba rontgen. Mode ini tidak pernah disimpan, simpanan aslimu aman.', t: 0, ready: true, morning: true, done: () => {} };
   game.scene = 'trans'; sfx('morning');
 }
-addEventListener('keydown', ev => { if (ev.shiftKey && ev.key.toLowerCase() === 'k' && game.scene === 'title' && !game.overlay) startUji(); }); // [uji] tersembunyi
+addEventListener('keydown', ev => { if (ev.shiftKey && ev.key.toLowerCase() === 'k' && game.scene === 'title' && !game.overlay) startUji(); if (ev.shiftKey && ev.key.toLowerCase() === 'l' && game.scene === 'title' && !game.overlay) startPractice(); /* [3b] */ }); // [uji] tersembunyi
 function updateTitle() {
   const save = readSave(); const opts = [{ id: 'new', label: 'Main Baru', fn: startCreate }];
   if (save) opts.push({ id: 'cont', label: 'Lanjutkan', fn: () => { S = save; loadWorld(); npcWarm(); game.scene = 'play'; fadeIn(); // [rev] npcWarm: hitung NPC saat muat
     if (S.kosMoved) { delete S.kosMoved; dialog(['Kamar Sewa lama sudah tidak ada. Sekarang kamu ngekos di Kos Melati, ujung kanan Kampung Asri: kamar 5, pintu bergambar hati.', 'Sewanya ' + rupiah(CFG.KOS.RENT_DAY) + ' per hari, dipotong tiap pagi. Rumah di ujung kiri Kampung Asri bisa dikontrak setelah ruko direnovasi.']); }
     else if (S.gardenNew) { delete S.gardenNew; dialog(['Ada yang baru: kebun herba. Pot di rumahmu bisa ditanami bibit dari Warung Bu Ratna dan Pondok Jamu.', 'Pak Udin menitipkan dua bibit Lidah Buaya untukmu. "Musim kemarau begini disiram tiap hari, nggih, Dok."']); } } }); // [2g]
-  opts.push({ id: 'lat', label: 'Latihan Minigame', fn: startPractice });
+  /* [3b] Latihan Minigame disembunyikan dari layar judul (permintaan user 2026-11-17); tetap bisa dibuka dengan Shift+L untuk playtest */
   game.titleOpts = opts; game.titleSel = clamp(game.titleSel || 0, 0, opts.length - 1);
   if (hit('up')) game.titleSel = (game.titleSel + opts.length - 1) % opts.length;
   if (hit('down')) game.titleSel = (game.titleSel + 1) % opts.length;
@@ -3130,7 +3132,7 @@ function drawClinicHD() {
   } else {
     // [2c-rev4] kotak ramping & tegak (user: strip lebar menghalangi layar): status + jam, lalu antrian / stok / kebersihan per baris
     const q = queueing().length, dirty = C.clean < K.DIRTY_LIMIT, st = C.open ? 'BUKA' : 'TUTUP', hrs = wdIdx() === K.CLOSED_WD ? 'libur' : pad2(K.OPEN_H) + '-' + pad2(K.CLOSE_H);
-    const rows = [['Antrian ' + q + '/' + queueMax(), MGC.lite], ['Stok ' + C.stock, C.stock ? MGC.lite : '#ffb0a0'], ['Bersih ' + Math.round(C.clean) + '%', dirty ? '#ffb0a0' : MGC.lite]];
+    const rows = [['Antrian ' + q + '/' + queueMax(), MGC.lite], ['Stok ' + C.stock, C.stock ? MGC.lite : '#ffb0a0'], ['Bersih ' + Math.round(C.clean) + '%', dirty ? '#ffb0a0' : MGC.lite]].concat(k3HudRows()); /* [3b-3] */
     const bw = Math.max(hW(st, true) + 5 + hW(hrs), ...rows.map(r => hW(r[0]))) + 14;
     hBox(4, 62, bw, 8 + (rows.length + 1) * 10.5, 'dark', { thin: true });
     const ow = HT(st, 10, 66, C.open ? '#a8f08a' : '#ffb0a0', { bold: true, sh: DK }); HT(hrs, 10 + ow + 5, 66, MGC.lite2, { sh: DK });
@@ -3332,67 +3334,7 @@ function openExam(p) {
 
 // ---- [2e] Layar Staf (meja praktik / Manajemen; GDD §5): rekrut, pelatihan, berhentikan ----
 const STAFF_OFF = { gaji: 'Libur · gaji tidak terbayar', latih: 'Libur · ikut pelatihan', baru: 'Mulai besok pagi', minggu: 'Libur hari Minggu' };
-function openStaff() {
-  if (S.clinicStage < 2) return dialog(['Staf baru bisa direkrut setelah klinik di-upgrade ke Klinik Gigi.']);
-  const T = CFG.STAFF, ov = { kind: 'panel', t: 0 };
-  ov.update = function () {
-    this.t++;
-    if (hit('esc') && this.t > 1) return closeOverlay();
-    if (input.click) { const h = topHit(input.click, /^sf/); if (h) h.fn(); }
-  };
-  const portrait = (id, X, Y, w, h) => { hInset(X, Y, w, h, '#e8d8b8'); hc.save(); hc.beginPath(); hc.rect((X + 1) * HI, (Y + 1) * HI, (w - 2) * HI, (h - 2) * HI); hc.clip();
-    const s = Math.min((w - 2) / 24, (h - 2) / 32); hc.drawImage(chr(id, { dir: 'down' }), (X + w / 2 - 12 * s) * HI, (Y + 1) * HI, 24 * s * HI, 32 * s * HI); hc.restore(); };
-  const pips = (X, Y, n, max, col) => { for (let i = 0; i < max; i++) { hR(X + i * 9, Y, 7, 7, '#6a4a2a'); hR(X + i * 9 + .5, Y + .5, 6, 6, i < n ? col : '#f2e2c0'); } };
-  ov.drawHD = function () { hDim(this, .45); dropIn(this, 16, 6, 448, 258, () => this.body()); };
-  ov.body = function () {
-    const hv = hoverId(), X0 = 16, Y0 = 6, W = 448, H = 258;
-    hBox(X0, Y0, W, H, 'paper', { ornate: true });
-    HT('Staf Klinik', 240, Y0 + 9, MGC.ink, { k: 4, sh: '#e8b878', align: 'c' }); hDivider(X0 + 14, Y0 + 34, W - 28);
-    const btn = (X, Y, w, label, id, fn, o = {}) => { hBtn(X, Y, w, 16, label, { kind: o.off ? 'dark' : hv === id ? 'gold' : o.main ? null : 'paper', on: o.main && !o.off, bold: !!o.main });
-      if (o.off) { hc.fillStyle = 'rgba(70,50,30,.45)'; hc.fillRect(X * HI, Y * HI, w * HI, 16 * HI); }
-      clickable(X, Y, w, 16, () => { if (o.off) { sfx('ui_deny'); if (o.msg) toast(o.msg, 'bad'); } else fn(); }, id); };
-    Object.keys(STAFF_ROLES).forEach((role, ci) => {
-      const R0 = STAFF_ROLES[role], cx = X0 + 12 + ci * 216, cw = 208, st = staffOf(role);
-      hBox(cx, Y0 + 40, cw, 186, 'paper', { thin: true, shadow: false });
-      HT(R0.name, cx + 7, Y0 + 45, MGC.ink, { bold: true }); HT(rupiah(T.WAGE[role]) + '/hari', cx + cw - 7, Y0 + 45, MGC.ink2, { align: 'r' });
-      hWrap(R0.fx, cw - 14).slice(0, 2).forEach((l, k) => HT(l, cx + 7, Y0 + 55 + k * 9, '#2a4a7a'));
-      if (st) {
-        const I = STAFF_INFO[st.id], y = Y0 + 76; portrait(st.id, cx + 7, y, 42, 54);
-        HT(staffName(st.id), cx + 56, y + 1, MGC.ink, { bold: true });
-        const on = staffOn(role), off = STAFF_OFF[st.off] || (wdIdx() === CFG.CLINIC.CLOSED_WD ? STAFF_OFF.minggu : '');
-        HT(on ? (st.energy <= 0 ? 'Bekerja · kelelahan' : 'Bekerja hari ini') : off, cx + 56, y + 12, on ? (st.energy <= 0 ? MGC.red : '#2e7a34') : '#a8700a', { bold: true });
-        HT('Skill', cx + 56, y + 25, MGC.ink2); pips(cx + 102, y + 25, st.skill, T.SKILL_MAX, '#e3aa3c');
-        HT('Energi', cx + 56, y + 36, MGC.ink2); pips(cx + 102, y + 36, st.en, T.ENERGY_LV_MAX, '#5ccf4a');
-        HT('Tenaga', cx + 56, y + 47, MGC.ink2); hBar(cx + 102, y + 47, 94, 7, st.energy / T.ENERGY_MAX, st.energy > 30 ? '#5ccf4a' : '#ef5a4a');
-        const eff = 1 + T.SKILL_STEP * (st.skill - 1);
-        const ef = eff * (st.energy <= 0 ? T.TIRED : 1);
-        HT(role === 'resep' ? 'Efek: sabar +' + Math.round(T.PATIENCE * ef * 100) + '%, antrian +' + T.QUEUE : 'Efek: zona +' + Math.round(T.ZONE * ef * 100) + '%, sakit -' + Math.round(T.PAIN * ef * 100) + '%', cx + 7, y + 60, MGC.ink, { bold: true });
-        HT('Tenaga -' + T.ENERGY_USE[st.en - 1] + ' per ' + (role === 'resep' ? 'pasien' : 'tindakan') + (st.energy <= 0 ? ' · lelah' : ''), cx + 7, y + 71, st.energy <= 0 ? MGC.red : MGC.ink2);
-        HT(fitText('"' + I.say + '"', cw - 14), cx + 7, y + 83, '#6a4a26');
-        const by = Y0 + 186; if (!st.train) HT('Pelatihan (staf libur 1 hari):', cx + 7, by - 11, MGC.ink2); else HT('Pelatihan ' + (st.train.kind === 'skill' ? 'Skill' : 'Energi') + ' · ' + dayLabel(st.train.day), cx + 7, by - 11, '#a8700a', { bold: true });
-        [['skill', 'Skill', st.skill, T.SKILL_MAX, T.SKILL_COST], ['energi', 'Energi', st.en, T.ENERGY_LV_MAX, T.ENERGY_COST]].forEach(([k, lb, lv, mx, cost], i) => {
-          const c = Math.round((cost[lv + 1] || 0) * jrTrainMul()), max = lv >= mx, /* [3b-1] */ busy = !!st.train, poor = !max && S.money < c, bx = cx + 7 + i * 100;
-          btn(bx, by, 96, max ? lb + ' Lv maks' : lb + ' Lv' + (lv + 1) + ' · ' + (c ? (c / 1e6).toLocaleString('id-ID') + 'jt' : 'gratis'), 'sft' + role + k, () => trainStaff(role, k === 'skill' ? 'skill' : 'en'),
-            { off: max || busy || poor, msg: max ? '' : busy ? 'Sudah ada pelatihan terjadwal.' : 'Uangmu belum cukup.' });
-        });
-        btn(cx + 7, by + 19, 196, 'Berhentikan', 'sff' + role, () => closeOverlay(() => dialog(['Berhentikan ' + staffName(st.id) + '?'], { choices: [
-          { label: 'Ya, berhentikan', fn: () => { fireStaff(role); openStaff(); } }, { label: 'Batal', fn: openStaff }] })));
-      } else {
-        HT('Kandidat', cx + 7, Y0 + 74, MGC.ink2, { bold: true });
-        R0.cands.forEach((id, k) => {
-          const y = Y0 + 85 + k * 46, I = STAFF_INFO[id]; portrait(id, cx + 7, y, 32, 42);
-          HT(staffName(id), cx + 45, y + 3, MGC.ink, { bold: true });
-          hWrap(I.ciri, cw - 52).slice(0, 3).forEach((l, j) => HT(l, cx + 45, y + 18 + j * 9, MGC.ink2));
-          btn(cx + cw - 52, y, 45, 'Rekrut', 'sfh' + id, () => { hireStaff(role, id); }, { main: true });
-        });
-      }
-    });
-    const tot = Object.keys(STAFF_ROLES).reduce((a, r) => a + (staffOf(r) ? T.WAGE[r] : 0), 0);
-    HT('Gaji dipotong tiap pagi Senin-Sabtu · total ' + rupiah(tot) + '/hari', X0 + 14, Y0 + 230, MGC.ink2); HT('Uang kurang = staf libur hari itu.', X0 + 14, Y0 + 240, MGC.ink2);
-    hBtn(X0 + W - 88, Y0 + 229, 74, 19, 'Tutup', { kind: hv === 'sfx' ? 'gold' : null, on: true, bold: true }); clickable(X0 + W - 88, Y0 + 229, 74, 19, () => closeOverlay(), 'sfx');
-  };
-  openOverlay(ov);
-}
+function openStaff() { return openStaffG(); } /* [3b-3] panel staf 2×2 (4 peran) di src/klinik3b.js */
 
 // ---- Tarif (Manajemen; GDD §4.1) ----
 function openTariff() {
@@ -4706,10 +4648,10 @@ function finishProc(job) {
     if (Math.random() < X.COMPLIC_P * nikahComplicMul()) { // [3a-5] Galih 25%
       job.complic = m; job.errors.push({ sev: 'major', text: 'Komplikasi: ' + MED[m].risk.toLowerCase() }); } else notes.push('Risiko tidak diketahui: ' + MED[m].name.toLowerCase() + '.'); });
   job.grade = mgGrade(job); const g = job.grade, fail = g === 'gagal' && tx !== 'konsul', part = job.payFrac != null ? job.payFrac : 1;
-  R.pay = Math.round(tariff(tx) * part / 1000) * 1000; R.mint = herbMint(job, R.pay); R.pay += R.mint; earn(R.pay); // [2g] Mint
+  R.pay = Math.round(txPay(job) * part / 1000) * 1000; /* [3b-3] PSA 50/50 */ R.mint = herbMint(job, R.pay); R.pay += R.mint; earn(R.pay); // [2g] Mint
   const xf = takeXray(p); R.pay += xf.fee; R.xfee = xf.fee; R.admin = xf.admin; staffUse('perawat'); // [2e] rontgen ditagih bersama; Perawat memakai tenaga
   R.energy = Math.round((cs.energy + job.extraEnergy) * (job.abort ? Math.max(.3, part) : 1)); addEnergy(-R.energy);
-  addStress(K.STRESS_PER_PATIENT * band(tx).stress); C.clean = Math.max(0, C.clean - K.DIRTY_PER_PATIENT); C.served++;
+  addStress(K.STRESS_PER_PATIENT * band(tx).stress); C.clean = Math.max(0, C.clean - K.DIRTY_PER_PATIENT * k3DirtyMul()); staffUse('bersih'); /* [3b-3] */ C.served++;
   if (!fail) { if (opt && exact && opt.g === 'ideal' && g !== 'cukup') addRep(nikahRep(K.REP_DONE + X.REP_DX_OK)); else if (opt) addRep(nikahRep(K.REP_DONE)); } // [3a-5] Laras ×1,25
   const sirih = !fail && job.herbUsed && job.herb === 'sirih' && (g === 'sukses' || g === 'sempurna');
   if (sirih && !p.npc) { addRep(CFG.GARDEN.MG.REP); notes.push('Kompres daun sirih.'); } // [2g] Sirih pasien biasa: reputasi +1
@@ -4722,7 +4664,7 @@ function finishProc(job) {
   if (fail) {
     if (!nikahShield()) addRep(M.REP_FAIL); addStress(M.STRESS_FAIL); R.leave = null; // [3a-5] Raka: reputasi tidak turun
     if (opt) { const d = job.failReturn || (cabutTx && !job.abort ? 'pascaCabut' : p.dx); R.ctl = back(d, job.failReturn ? 'ctl' : 'gagal', job.failReturn ? X.CONTROL_DAYS : rnd(M.FAIL_RETURN), job.failSay || DX[d].ctlSay || 'Dok, gigi yang kemarin masih bermasalah. Bisa dilihat lagi?'); R.ctlDx = d; }
-  } else if (opt && opt.next) { R.ctl = back(opt.next, 'ctl', X.CONTROL_DAYS); R.ctlDx = opt.next; }
+  } else if (opt && opt.next) { R.ctl = back(opt.next, 'ctl', opt.nextDays ? rnd(opt.nextDays) : X.CONTROL_DAYS); /* [3b-3] */ R.ctlDx = opt.next; }
   else if (opt && tx === 'cabut' && job.dry) { R.ctl = back('pascaCabut', 'cukup', 3, 'Dok, bekas cabutan kemarin nyeri sekali sejak semalam.'); R.ctlDx = 'pascaCabut'; }
   else if (opt && g === 'cukup' && tx !== 'konsul' && Math.random() < M.CUKUP_RETURN_P) { const d = cabutTx ? 'pascaCabut' : p.dx; R.ctl = back(d, 'cukup', rnd(X.RETURN_DAYS), 'Dok, gigi yang kemarin ditangani masih agak mengganjal. Bisa dicek lagi?'); R.ctlDx = d; }
   const errs = job.errors.map(e => e.text);
@@ -4730,7 +4672,7 @@ function finishProc(job) {
   addRecord(p, dxKey, tooth, tx, R.pay, notes.join(' '), R.ctl);
   R.min = Math.round(cs.min * (job.abort ? Math.max(.3, part) : 1)) + (job.complic ? X.COMPLIC_MIN : 0) + R.admin + brokenExtraMin(); // [rev] lampu unit rusak
   R.rep = S.repPts - rep0; R.stress = Math.round(S.stress - st0); R.fail = fail; R.exact = !!(opt && exact);
-  jrProc(job, R); /* [3b-1] kontrol, diagnosis, riwayat medis, herba, warga */
+  k3Proc(job, R); /* [3b-3] */ jrProc(job, R); /* [3b-1] kontrol, diagnosis, riwayat medis, herba, warga */
   return R;
 }
 function afterProc(job) {
@@ -5000,7 +4942,7 @@ window.SR = {
   rel: { gift: openGift, give: giveGift, shop: openGiftShop, card: eventCard, choice: eventChoice, dialog, st: relSt, add: addRel, ready: relReady, janji: relJanji, play: (id, n) => playEvent(id, { n }), finish: (id, n, v) => finishEvent(id, evOf(id, n), v), talkRel: relTalk, lineOk: relLineOk, taste: tasteOf, list: giftList, toast: relToast }, // [3a-4] pengait uji
   nikah: NIKAH_SR, // [3a-5] pengait uji
   hang: { open: openHang, run: doHang, hadir: hangHadir, block: hangBlock, fokusMul: () => fokusMul(), kinds: () => hangKinds() }, // [3a-3] pengait uji
-  jr: JR_TEST, /* [3b-1] */ at2: { open: openRakT2, own: t2Own, st: t2St, newDay: t2NewDay, items: T2_ITEMS, kit: bleachKitBtns /* [3b-2] */ }, /* [3b-2] */ npc: { act: npcAct, now: npcNow, place: npcPlaceAt, route: npcRoute, sync: npcSync, talk: talkNpc, book: openBook, pick: pickLine, trust: addTrust, where: npcWhereText, segs: npcSegs, hireStaff, roster: NPC_ROSTER,
+  jr: JR_TEST, /* [3b-1] */ k3: K3_TEST, /* [3b-3] */ at2: { open: openRakT2, own: t2Own, st: t2St, newDay: t2NewDay, items: T2_ITEMS, kit: bleachKitBtns /* [3b-2] */ }, /* [3b-2] */ npc: { act: npcAct, now: npcNow, place: npcPlaceAt, route: npcRoute, sync: npcSync, talk: talkNpc, book: openBook, pick: pickLine, trust: addTrust, where: npcWhereText, segs: npcSegs, hireStaff, roster: NPC_ROSTER,
     scene: pendingScene, play: playScene, sikap: sikapPages, wargaDay, wargaVisit, wargaCands, consentT: trustConsent, care: careTrust, once: trustOnce, win: wargaWin, mark: npcMark, seedPrice, friendDisc }, // [3a] pengait uji (+ [3a-2])
   openGarden, openSeedShop, openBuild, gardenNewDay, gardenResize, gardenRefresh, plantStage, houseNewDay, newDay, payRent, currentAction: () => currentAction(), // [2g] pengait uji
   stars: () => stars(), repFromOld, opsNewDay, opsTick, openRepair, brokenBlocks, openDesk, meanGap: () => meanGap(), // [rev] pengait uji

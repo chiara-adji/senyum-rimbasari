@@ -65,7 +65,8 @@ Belanja bahan di **Warung Bu Ratna** (buka 06–21), simpan di Tas/Kulkas, masak
 
 Manajemen:
 - **Stok bahan**: satu angka, paket Rp 750rb (10 unit) di **Bahari Medika, Tanjung Arum**, atau dipesan lewat Kantor Pos Rimbasari (lihat §11.1; ACC 2026-11-13, dulu di Warung Bu Ratna). Stok 0 = hanya konsultasi.
-- **Kebersihan** 0–100: turun per pasien. <40 → reputasi turun.
+- **Kebersihan** 0–100: turun per pasien. <40 → reputasi turun. **[3b-3]** Klinik ≥90% bersih → peluang pasien setuju rencana +8%; kotor (<40) → −8%.
+- **Sterilisasi alat [3b-3, revisi user 2026-11-17]**: wajib sejak tahap 1 (autoklaf ada di interior tahap 1–3). Tiap tindakan yang memakai alat (selain konsultasi, resep, rujuk, rontgen) menambah 1 set alat kotor. Tanpa perawat: setelah klinik tutup pemain menyterilkan sendiri di autoklaf (30 menit, energi −3). Keluar dari klinik dengan alat kotor memunculkan peringatan *Sterilkan dulu / Tetap pergi*. Kalau alat masih kotor pagi berikutnya, tindakan beralat terkunci sampai disterilkan. Dengan **Perawat** yang bekerja: perawat menyterilkan otomatis saat klinik ditutup.
 - **Reputasi** ★1–5: dari hasil tindakan, pasien pergi, harga, dan event. Menentukan jumlah pasien tamu.
   - **[rev 2026-11-15, opsi C, ACC user]** Poin reputasi 0–600, mulai 0 (★1). Ambang ★2/★3/★4/★5 = **50 / 160 / 330 / 560**. Tindakan selesai +1, diagnosis tepat +1 lagi. Hukuman tetap: pasien pulang −3, kembali mengeluh −3, gagal −3, klinik kotor −2/hari, antrian penuh −1. Simpanan lama (skala 0–100) dikonversi otomatis dengan jumlah ★ yang sama.
   - Rata-rata pasien tamu per hari kerja di ★1–★5: **2 / 3 / 4 / 5 / 6** (dulu 5/7/9/11/13) × musim × tarif. Tujuannya pasien sedikit, sehingga ada waktu menjelajah dan ngobrol dengan warga.
@@ -106,9 +107,9 @@ Basis harga wajar (T1, revisi user 2026-11-17: turun ±30%, dibulatkan 10rb): Ko
 | Peran | Terbuka | Efek | Gaji/hari |
 |---|---|---|---|
 | Resepsionis | Tahap 2 | Antrian +2, kesabaran +30%, tagihan otomatis | ±120rb |
-| Perawat Gigi | Tahap 2 | Zona sukses +15%, sakit −20% | ±160rb |
-| Petugas Kebersihan | Tahap 3 | Kebersihan terjaga | ±100rb |
-| Dokter Gigi Rekan | Tahap 3 | Otomatis menangani konsultasi, scaling, dan tambal di kursi 2 | Bagi hasil 40–50% |
+| Perawat Gigi | Tahap 2 | Zona sukses +15%, sakit −20%, **steril alat otomatis saat klinik tutup** [3b-3] | ±160rb |
+| Petugas Kebersihan | Tahap 3 | Hanya bersih-bersih: kebersihan 100 tiap pagi, kotor per pasien ×0,25 → klinik selalu bersih, pasien lebih percaya (setuju +8%) | ±100rb |
+| Dokter Gigi Rekan | Tahap 3 | Otomatis menangani konsultasi, scaling, GIC, dan komposit di kursi 2 (Bima 50 mnt, bagi hasil 50% · Hana 75 mnt, 40%); butuh alat steril | Bagi hasil 40–50% |
 
 - Kandidat: Resepsionis (Putri, Yoga) · Perawat (Rina, Fajar, Dewi) · Kebersihan (Pak Udin, Bu Siti) · Dokter Rekan (drg. Hana, drg. Bima).
 - Upgrade lewat menu **Pelatihan**: **Skill Lv1–5** dan **Energi Lv1–3** (Rp 1,5–6jt per level, staf libur 1 hari).
@@ -145,7 +146,7 @@ Diagnosis benar → bonus. Salah → pasien kembali mengeluh (pemicu konflik kla
 - **Scaling**: drag karang → karang di bawah gusi (kasus T2–3) → polishing → edukasi (pilihan dialog).
 - **Tambal**: bius (opsional) → bor area karies, hindari zona pulpa merah (kalau kena → perforasi → PSA) → isolasi/etsa/bonding (urutan) → isi + timing light-cure → cek gigitan.
 - **Cabut**: antiseptik → pilih teknik bius (topikal/infiltrasi/blok) → suntik pelan → luksasi elevator → goyang berirama (terlalu kuat = akar patah) → tampon + instruksi.
-- **PSA** (2 kunjungan, tahap 3+). K1: bius, akses, ekstirpasi, ukur panjang kerja (rontgen / apex locator), irigasi, dressing, tambal sementara. K2 (3–7 hari): file berurutan sampai panjang kerja, irigasi, obturasi (timing), tambal permanen. Jumlah saluran: anterior 1 / premolar 2 / molar 3–4.
+- **PSA** (2 kunjungan, tahap 3+; alur terpasang [3b-3] ada di `minigame/06-psa.md`, kalimat berikut versi awal). K1: bius, akses, ekstirpasi, ukur panjang kerja (rontgen / apex locator), irigasi, dressing, tambal sementara. K2 (3–7 hari): file berurutan sampai panjang kerja, irigasi, obturasi (timing), tambal permanen. Jumlah saluran: anterior 1 / premolar 2 / molar 3–4.
 
 **Detail minigame per tindakan** (ACC 2026-11-11, visual di `design/v3/minigame.html`): `design/gdd/minigame/`. Isinya aturan umum (`00`), konsultasi, resep, tambalan sementara, tambal GIC, tambal komposit, PSA, scaling, cabut gigi susu, cabut gigi tetap & penyulit, dan bedah minor (`01`–`10`). Angka baru di folder itu masih berstatus usulan Tuning Knobs.
 
@@ -156,7 +157,7 @@ Diagnosis benar → bonus. Salah → pasien kembali mengeluh (pemicu konflik kla
 | Scaling | Manual | Ultrasonik | Air polishing |
 | Tambal | Bor low-speed + GIC | High-speed + komposit + LED | Loupe |
 | Cabut | Tang, elevator, infiltrasi | Periotome + bius blok | Set bedah minor |
-| PSA | — | File tangan | Rotary + apex locator |
+| PSA | — | Set Endo Basic 9jt (K-file, GP, spreader, sealer; panjang kerja dari rontgen) · Set Endo Advanced 15jt (endomotor ProTaper, EndoActivator, apex locator) | — (T3 = loupe & alat bedah) |
 
 Harga alat: T1 2–5jt · T2 8–15jt · T3 20–40jt. Kesulitan kasus naik bersama tahap klinik.
 
@@ -165,7 +166,7 @@ Harga alat: T1 2–5jt · T2 8–15jt · T3 20–40jt. Kesulitan kasus naik bers
 - *Potongan gigi minigame:* geraham = potongan geraham (toothR); gigi depan (11–13, 21–23, 31–33, 41–43) untuk Komposit/GIC/Veneer = **tampak labial dari luar** (toothL): karies proksimal kelas III, fraktur sudut insisal kelas IV, diskolor = mahkota kekuningan, veneer menutup permukaan labial. Potongan labial (toothA, saluran akar terlihat) dipakai untuk PSA. ACC user 2026-11-17, terpasang.
 - *Bleaching (draf, usulan user 2026-11-17):* tata letak sama dengan scaling (4 panel, 8 gigi depan): cek warna awal → pelindung gusi (klik garis gusi tiap gigi) → oles gel (klik tiap gigi) → tunggu + sinar LED → sedot gel → cek warna akhir → instruksi (hindari kopi/teh/rokok 48 jam, ngilu sementara wajar). ACC user 2026-11-17, terpasang (`src/bleach3b.js`). Kasus **Gigi kuning menyeluruh** (25% kasus gigi depan setelah bor high-speed): Bleaching ideal, Veneer cukup. Harga wajar Rp 1.000.000 (Kemarau ×1,1). Butuh LED (paket high-speed) + **Kit Bleaching** Rp 400.000 isi 4 pasien di Bahari Medika (diskon teman berlaku); tanpa kit, Bleaching tidak muncul di rencana. Galat minor: pelindung tak lengkap, gel kena gusi tanpa pelindung, gel kena gusi lebih dari 3×, LED meleset, sisa gel.
 - Naik ke **klinik tahap 2** sudah termasuk **scaler ultrasonik + bius blok** (gratis).
-- **Rak T2 Bahari Medika** (tombol Alat, terbuka ≥8 challenge): Bor high-speed + LED + komposit **15jt** (membuka Tambal Komposit) · Periotome **8jt** (cabut: zona sukses +15%) · File tangan PSA **9jt** (baru bisa dibeli di tahap 3, Fase 3b-3). Diskon = harga teman Koh Hendra + imbalan Jurnal #27 (5%, sekali pakai).
+- **Rak T2 Bahari Medika** (tombol Alat, terbuka ≥8 challenge): Bor high-speed + LED + komposit **15jt** (membuka Tambal Komposit) · Periotome **8jt** (cabut: zona sukses +15%) · **Set Endo Basic 9jt** (tahap 3, membuka PSA) · **Set Endo Advanced 15jt** (butuh Basic; Fase 3b-3). Diskon = harga teman Koh Hendra + imbalan Jurnal #27 (5%, sekali pakai).
 - Beli → konfirmasi Koh Hendra → dikirim lewat Ilham, **terpasang besok pagi** (kabar di kartu pagi).
 - **Tambal Komposit** (500rb): gigi belakang; pilihan di Rencana Perawatan untuk karies, karies proksimal, pulpitis reversibel (setara GIC).
 - **Komposit Veneer** (800rb): estetik gigi depan. Kasus baru (30% kasus tambal dewasa setelah bor high-speed terpasang): **Karies gigi depan** (11–13, 21–23, 31–33, 41–43), **Fraktur gigi depan** (habis jatuh/gompal; 11, 12, 21, 22), **Gigi depan kekuningan** (bercak/kuning; 11, 12, 21, 22). GIC untuk karies/fraktur depan = pilihan "ok".
