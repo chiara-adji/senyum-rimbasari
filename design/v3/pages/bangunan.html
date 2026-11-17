@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bangunan v3</title><link rel="stylesheet" href="style.css">
+<style>.bl{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:14px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}
+.bl .ex{background:#9cc070;border-radius:8px;padding:10px;display:flex;align-items:flex-end;justify-content:center;min-height:120px}
+.bl h3{margin:0 0 4px}.ints{display:grid;gap:10px}@media (max-width:820px){.bl{grid-template-columns:1fr}}</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Bangunan</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a class="on" href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Setiap bangunan: eksterior (kiri, 2×) dan interior satu layar 272×184 (kanan, 2×). Bangunan yang bisa dimasuki punya pintu di bawah tengah. Area terbuka (Angkringan, Kebun Kopi, Voli, Bukit Bintang) ada di halaman Peta.</p>
+  <h2>1. Objek interaktif per level</h2>
+  <div class="frame"><canvas id="objs"></canvas></div>
+  <p class="cap">Baris 1: kursi dental tahap 0 (rusak) → Lv 1 → Lv 2 → Lv 3 → Lv 4 (premium). Baris 2: meja snack & kopi Lv 1–3 dan meja kerja Lv 1–3. Baris 3: objek yang bersinar kuning saat pemain dekat + prompt [E].</p>
+  <div id="list"></div>
+  <div class="note"><b>Yang perlu kamu review:</b><ol>
+    <li>Eksterior v3.1 mengikuti model referensi (genteng besar, atap pelana depan, dinding batu/papan, rangka kayu). Sudah sesuai?</li><li>Interior bertanda <b>SAMPEL GAYA BARU</b> (Kontrakan, Kedai Kopi, Toko Roti, Perpustakaan): gaya ini diterapkan ke semua interior?</li>
+    <li>Rumah Lv 1–4 (Kamar Sewa → Kontrakan → Rumah Subsidi → Rumah Estetik) sudah sesuai bayanganmu?</li>
+    <li>Bangunan mana yang mau diubah isinya atau tampilannya?</li></ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+// objek interaktif
+(()=>{const[c,x]=cv(540,214);paint(x,0,0,540,214,FLOOR.tileCream);
+  [0,1,2,3,4].forEach(l=>x.drawImage(dentalUnitV(l),6+l*106,4));
+  [1,2,3].forEach(l=>x.drawImage(snackTable(l),10+(l-1)*64,82));[1,2,3].forEach(l=>x.drawImage(workDesk(l),206+(l-1)*64,74));
+  const objs=[dentalUnitV(2),snackTable(2),workDesk(2)],lab=['Periksa pasien','Ngopi & ngemil','Rekam medis'];
+  objs.forEach((o,i)=>{const X=40+i*180;x.drawImage(glow(o),X-1,146);promptBox(x,X+(o.width/2|0),130,lab[i]);});show('objs',c,2);})();
+const SEC=[
+ ['2. Klinik (4 level + tahap 0)',[
+  ['klinik0',['klinik0'],'Tahap 0 · Ruko Tua','Ruko kosong bertuliskan DIJUAL, rolling door berkarat, jendela ditutup papan, rumput liar.'],
+  ['klinik1',['klinik1'],'Lv 1 · Praktik Pribadi (tahap 1)','Eksterior seadanya: cat baru, pintu kayu, plang nama kecil di tiang. Alat terbatas, interior sederhana.'],
+  ['klinik2',['klinik2'],'Lv 2 · Klinik Gigi (tahap 2)','Ada lampu dinding, kanopi, papan nama, dan pot bunga. Alat masih terbatas, interior mulai estetik.'],
+  ['klinik3',['klinik3'],'Lv 3 · Klinik Lengkap (tahap 3)','Neon sign KLINIK GIGI, jendela terang, bangku di luar. Alat di-upgrade, 2 kursi, ruang sterilisasi.'],
+  ['klinik4',['klinik4a','klinik4b'],'Lv 4 · Pusat Kesehatan Gigi (tahap 4)','Bangunan 2 lantai, neon sign besar SENYUM, balkon, aksen kayu. Alat terbaik termasuk set bedah dan rontgen panoramik.']]],
+ ['3. Rumah (4 level)',[
+  ['rumah1',['rumah1'],'Lv 1 · Kamar Sewa (gratis)','Kos 4 pintu, kamar pemain nomor 3 (ada ikon hati). Herba di 4 pot.'],
+  ['rumah2',['rumah2'],'Lv 2 · Kontrakan (Rp 2 jt / 30 hari)','Rumah petak dengan teras sempit dan teralis jendela.'],
+  ['rumah3',['rumah3'],'Lv 3 · Rumah Subsidi (Rp 50 jt)','Rumah tipe kecil milik sendiri, pagar, dan kebun herba di samping.'],
+  ['rumah4',['rumah4'],'Lv 4 · Rumah Estetik (Rp 150 jt)','Renovasi modern tropis: dinding kayu, jendela kaca besar, lampu, taman.']]],
+ ['4. Zona 1 · Alun-alun',[
+  ['balai',['balai'],'Balai Kota','Kantor Pak Harjo dan loket pajak.'],['warung',['warung'],'Warung Bu Ratna','Paket bahan klinik dan bibit dasar.'],
+  ['kedai',['kedai'],'Kedai Kopi Seduh','Nongkrong 15–22, tempat kerja Nadia.'],['roti',['roti'],'Toko Roti Manis','Toko Kak Tari.'],['pos',['pos'],'Kantor Pos','Tempat pesan alat Tier 1, kantor Mas Ilham.'],
+  ['angkringan',[],'Angkringan Pak Slamet (area terbuka)','Gerobak, tikar, dan lampu. Buka 18–24, tidak punya interior.']]],
+ ['5. Zona 2 · Kampung Asri',[
+  ['endang',['endang'],'Rumah Keluarga Endang','Penjahit dan rumah Dimas.'],['wiryo',['wiryo'],'Rumah Kakek Wiryo','Catur dan kursi goyang.'],
+  ['lurah',['lurah'],'Rumah Pak Harjo (Lurah)',''],['bowo',['bowo'],'Rumah Pak Bowo','Petani kopi.'],['guru',['guru'],'Rumah Bu Sinta (Guru)',''],
+  ['jamu',['jamu'],'Pondok Jamu','Tempat Mbah Darmi.'],['sd',['sd'],'SD Negeri Rimbasari',''],['kos',['kos'],'Kos Melati (baru, menunggu acc)','Rumah besar Pak Udin, kamarnya disewakan sejak Bu Melati meninggal. Penghuni: Rina, Yoga, drg. Hana, drg. Bima. Pak Udin di kamar depan (sayap kiri).']]],
+ ['6. Zona 3 · Jalan Niaga',[
+  ['terminal',['terminal'],'Terminal Bus','Bus ke Tanjung Arum dan Metrapura.'],['losmen',['losmenL','losmenA','losmenB'],'Losmen Singgah (baru, menunggu acc)','Di samping Terminal, 6 kamar, dikelola Bu Sri 07–19. Pasien desa menginap sebelum kunjungan lanjutan; kamar 2 & 5 bisa dimasuki (trust ≥ 40).'],['polisi',['polisi'],'Pos Polisi','Tempat tugas Ipda Raka (romance).'],
+  ['teknik',['teknik'],'Kantor Konsultan Teknik','Kantor Arya, insinyur sipil (romance).'],['adji',['adji'],'Kantor Akuntan Adji','Romance.'],
+  ['puskes',['puskes'],'Puskesmas','Tempat Wulan (bidan) dan dr. Galih (dokter umum). Interior 320×200 dengan sudut rawat inap (baru, menunggu acc).'],['studio',['studio'],'Studio Foto Lensa','Tempat Laras.']]],
+ ['7. Zona 4 · Lereng Bukit',[['perpus',['perpus'],'Perpustakaan & Kebun Bunga','Tempat Sekar.']]],
+ ['8. Kota lain',[['bahari',['bahari'],'Bahari Medika · Tanjung Arum','Toko alat Tier 2.'],['metra',['metra'],'Metra Dental Supply · Metrapura','Toko alat Tier 3, bangunan 2 lantai.']]],
+];
+const host=document.getElementById('list');let n=0;
+SEC.forEach(([title,items])=>{host.insertAdjacentHTML('beforeend','<h2>'+title+'</h2>');
+  items.forEach(([ek,rooms,name,desc])=>{const id='b'+(n++);let h='<div class="bl"><div><h3>'+name+'</h3><p class="cap">'+desc+'</p><div class="ex"><canvas id="'+id+'e"></canvas></div></div><div class="ints">';
+    rooms.forEach((r,i)=>{h+='<div><canvas id="'+id+'r'+i+'"></canvas><p class="cap">'+ROOMS3[r].name+': '+ROOMS3[r].desc+'</p></div>';});
+    host.insertAdjacentHTML('beforeend',h+'</div></div>');
+    show(id+'e',EXT[ek],2);rooms.forEach((r,i)=>show(id+'r'+i,renderRoom(r),2));});});
+</script></body></html>

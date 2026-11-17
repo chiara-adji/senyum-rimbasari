@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Peta v3</title><link rel="stylesheet" href="style.css">
+<style>.tools{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.tools button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.tools button.on{background:var(--accent);color:#2a1408}</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Peta</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a class="on" href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Kota terdiri dari 4 zona. Tiap zona berukuran 768×432 (sekitar 1,6 × 1,6 layar), dan kamera mengikuti pemain. Pindah zona lewat panah di tepi peta. Tombol <b>Label bangunan</b> dan <b>Kotak 1 layar</b> hanya alat bantu review (default mati, tidak muncul di game).</p>
+  <h2>1. Peta kota</h2>
+  <div class="frame"><canvas id="world"></canvas></div>
+  <p class="cap">Lereng Bukit di utara, Kampung Asri di barat, Alun-alun di tengah, Jalan Niaga di timur. Tanjung Arum dan Metrapura dicapai lewat bus dari Terminal.</p>
+  <div id="zones"></div>
+  <h2>6. Animasi transisi zona (otomatis)</h2>
+  <div class="frame"><canvas id="trans"></canvas></div>
+  <p class="cap">Jalan ke tepi → layar menutup melingkar → layar muat (nama zona, tips, "waktu berhenti") → zona baru terbuka.</p>
+  <div class="note"><b>Yang perlu kamu review:</b><ol><li>Penempatan bangunan di tiap zona.</li><li>Kepadatan: masih terlalu ramai, atau terlalu sepi?</li><li>Bayangan, tekstur rumput, jalur tanah, pagar: sudah cukup hidup?</li></ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+const ORDER=['alun','kampung','niaga','lereng'];const state={};
+(()=>{const W=480,H=300;const[c,x]=cv(W,H);panel(x,0,0,W,H,'paper');const rr=rng(4);for(let k=0;k<400;k++)P(x,6+rr()*(W-12),6+rr()*(H-12),'#e8c890');
+  const blob=(cx,cy,rx,ry,c1,c2)=>{ellipse(x,cx,cy,rx+2,ry+2,'#7a5a34');ellipse(x,cx,cy,rx,ry,c1);ellipse(x,cx-4,cy-4,rx-10,ry-10,c2);};
+  [[120,190,240,190],[240,190,380,190],[240,190,240,80]].forEach(l=>{line(x,l[0],l[1],l[2],l[3],8,'#a8703e');line(x,l[0],l[1],l[2],l[3],4,'#e0b070');});
+  blob(240,74,118,44,'#8cc06a','#a8d47e');blob(92,200,82,66,'#9ccc70','#b4dc88');blob(240,204,66,60,'#d8c08a','#e8d4a4');blob(388,200,82,66,'#c8b4a0','#dccab6');
+  [[160,192],[320,192],[240,128]].forEach(([a,b])=>{disc(x,a,b,7,'#4a2410');disc(x,a,b,5,'#ffd23a');disc(x,a,b,2,'#4a2410');});
+  const lab=(t,X,Y,lines)=>{TC(x,t,X,Y,'#3a1a08',9,'#fff2d4',true);lines.forEach((s,i)=>TC(x,s,X,Y+12+i*10,'#6a3416',9));};
+  lab('4 · LERENG BUKIT',240,40,['Perpustakaan · Kebun Kopi','Voli · Bukit Bintang']);
+  lab('2 · KAMPUNG ASRI',92,160,['Rumah Dokter','Endang · Wiryo','Lurah · Bowo · Guru','Jamu · SD · Kos Melati']);
+  lab('1 · ALUN-ALUN',240,166,['Klinik · Balai Kota','Warung · Kedai','Roti · Pos','Angkringan']);
+  lab('3 · JALAN NIAGA',388,160,['Terminal · Losmen · Polisi','Konsultan Teknik','Kantor Adji','Puskesmas · Studio']);
+  T(x,'● gerbang zona (layar transisi)',12,H-20,'#6a3416',9,null,true);show('world',c,2);})();
+const host=document.getElementById('zones');
+const CAM={alun:[144,96],kampung:[480,96],niaga:[0,96],lereng:[144,162]};
+ORDER.forEach((k,i)=>{const z=ZONES[k];state[k]={season:'kemarau',labels:false,cam:false};
+  host.insertAdjacentHTML('beforeend','<h2>'+(i+2)+'. Zona '+z.no+' · '+z.name+'</h2><div class="tools" id="t_'+k+'"><button data-s="kemarau" class="on">Kemarau</button><button data-s="hujan">Hujan</button><button data-l="1">Label bangunan</button><button data-c="1">Kotak 1 layar</button></div><div class="frame"><canvas id="z_'+k+'"></canvas></div>');
+  const draw=()=>{const st=state[k];const img=drawZone(z,PAL[st.season],{labels:st.labels?ZLABELS:null});const x=img.getContext('2d');
+    if(st.cam){const[cx,cy]=CAM[k];x.strokeStyle='rgba(255,255,255,.9)';x.setLineDash([6,4]);x.lineWidth=2;x.strokeRect(cx+1,cy+1,478,268);x.setLineDash([]);T(x,'1 layar 480×270',cx+6,cy+6,'#ffffff',9,'#2a1408',true);}
+    show('z_'+k,img,1.5);};
+  draw();document.getElementById('t_'+k).addEventListener('click',e=>{const b=e.target;if(b.tagName!=='BUTTON')return;const st=state[k];
+    if(b.dataset.s){st.season=b.dataset.s;b.parentNode.querySelectorAll('[data-s]').forEach(q=>q.classList.toggle('on',q===b));}
+    if(b.dataset.l){st.labels=!st.labels;b.classList.toggle('on',st.labels);}if(b.dataset.c){st.cam=!st.cam;b.classList.toggle('on',st.cam);}draw();});});
+(()=>{const A=drawZone(ZONES.alun,PAL.kemarau),Bz=drawZone(ZONES.kampung,PAL.hujan);const el=document.getElementById('trans');el.width=480;el.height=270;el.style.width='960px';const x=el.getContext('2d');x.imageSmoothingEnabled=false;
+  const L=[0,1,0,2].map(s=>flipX(chr('pF',{dir:'side',step:s}))),Rt=[0,1,0,2].map(s=>chr('pF',{dir:'side',step:s}));
+  const iris=(cx,cy,r)=>{x.fillStyle='#1a0f0c';x.beginPath();x.rect(0,0,480,270);x.arc(cx,cy,Math.max(0,r),0,Math.PI*2);x.fill('evenodd');};
+  const t0=performance.now();
+  function loop(now){const t=((now-t0)/1000)%7,fi=Math.floor(now/140)%4,f=L[fi];
+    if(t<1.8){x.drawImage(A,0,48,480,270,0,0,480,270);drawChar(x,f,(150-t/1.8*146)|0,124);hud2(x,480,270,'Kemarau',7,'Senin · 07:40',ICS,null);}
+    else if(t<2.4){x.drawImage(A,0,48,480,270,0,0,480,270);drawChar(x,f,4,124);hud2(x,480,270,'Kemarau',7,'Senin · 07:40',ICS,null);iris(16,140,(1-(t-1.8)/.6)*520);}
+    else if(t<4.2){R(x,0,0,480,270,'#1a0f0c');const p=(t-2.4)/1.8;panel(x,120,74,240,112);
+      TC(x,'Menuju',240,86,'#6a3416',9);TC(x,'KAMPUNG ASRI',240,98,'#3a1a08',12,'#fff2d4');
+      R(x,140,152,200,2,'#a8703e');drawChar(x,Rt[fi],(140+p*176)|0,120);bar(x,140,162,200,8,p,'#5ccf4a');
+      TC(x,'Tips: siram kebun herba saat Kemarau.',240,196,'#f2d8a8',9);TC(x,'Waktu berhenti selama layar ini',240,210,'#b89070',9);}
+    else if(t<4.8){x.drawImage(Bz,480,48,480,270,0,0,480,270);drawChar(x,f,452,126);hud2(x,480,270,'Hujan',23,'Kamis · 17:20',ICR,null);iris(464,142,((t-4.2)/.6)*520);}
+    else{x.drawImage(Bz,480,48,480,270,0,0,480,270);drawChar(x,f,(452-(t-4.8)/2.2*60)|0,126);hud2(x,480,270,'Hujan',23,'Kamis · 17:20',ICR,(t-4.8)>.2?'Kampung Asri':null);}
+    requestAnimationFrame(loop);}requestAnimationFrame(loop);})();
+</script></body></html>

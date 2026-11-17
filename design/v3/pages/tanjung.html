@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tanjung Arum v3</title><link rel="stylesheet" href="style.css">
+<style>.tools{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.tools button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.tools button.on{background:var(--accent);color:#2a1408}.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}.pair figure{margin:0}.pair figcaption{font-size:13px;opacity:.8}img.shot{width:960px;max-width:100%;image-rendering:pixelated;border:1px solid var(--line);border-radius:6px}</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Tanjung Arum & Toko Alkes (Fase 2f)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="gigi.html">Gigi Potongan v2</a><a href="rontgen.html">Rontgen</a><a class="on" href="tanjung.html">Tanjung Arum</a></nav>
+  <p><b>DRAF, menunggu ACC.</b> GDD §11.1: bahan klinik dibeli di Bahari Medika, Tanjung Arum, sejak hari 1. Pemain naik bus dari Terminal Rimbasari (berangkat 07:00 dan 13:00, pulang 11:00 dan 17:00, 2 jam sekali jalan). Sumber gambar: <code>design/v3/src/tanjung.js</code>. Aset lama (Bahari Medika tampak luar, interior lama, Terminal) tidak diubah.</p>
+
+  <h2>1. Zona Tanjung Arum (1 layar 480×270, tanpa gulir)</h2>
+  <div class="tools" id="tz"><button data-s="kemarau" class="on">Kemarau</button><button data-s="hujan">Hujan</button><button data-l="1">Label</button></div>
+  <div class="frame"><canvas id="zone"></canvas></div>
+  <p class="cap">Kiri: halte (tempat tiba dan naik bus pulang) dengan bus "RIMBASARI" parkir. Tengah: Bahari Medika (satu-satunya bangunan yang bisa dimasuki). Kanan: toko ikan (pengisi, tidak bisa dimasuki). Bawah: trotoar pelabuhan (bangku, lampu, peti ikan, jaring, pelampung), pantai, tonggak tambat, dermaga kayu, tiga perahu nelayan, burung camar. Pemain hanya bisa berjalan di jalan, trotoar, dan pasir.</p>
+
+  <h2>2. Sprite baru (diperbesar 3×)</h2>
+  <div class="frame"><canvas id="sprites"></canvas></div>
+
+  <h2>3. Interior Bahari Medika: lama vs baru</h2>
+  <div class="frame"><canvas id="rooms"></canvas></div>
+  <p class="cap">Kiri: interior lama (toko alat T2 saja). Kanan: versi baru "Alat & Bahan". Rak bahan klinik dan tumpukan karton bahan di kiri, konter beli di depan Koh Hendra, etalase alat T1 di tengah, rak alat T2 di kanan dirantai dan digembok (terbuka setelah 8 challenge), etalase perhiasan Ci Lina di kanan bawah (cincin lamaran, GDD §9). Kursi dental pajangan dilepas supaya ruangan tidak sesak.</p>
+
+  <h2>4. Layar perjalanan bus (animasi)</h2>
+  <div class="frame"><canvas id="trans"></canvas></div>
+  <p class="cap">Mengganti layar transisi zona saat naik bus. Berbeda dengan pindah zona biasa, <b>waktu berjalan</b>: jam di layar bertambah 2 jam selama perjalanan.</p>
+
+  <h2>5. Panel HD (digambar dengan mesin panel game yang sudah ada)</h2>
+  <div id="panels"></div>
+
+  <div class="note"><b>Yang perlu kamu review:</b><ol><li>Suasana kota pelabuhan Tanjung Arum: laut, dermaga, perahu, kelapa. Sudah cukup berbeda dari Rimbasari?</li><li>Halte dan bus: ukuran, warna.</li><li>Interior Bahari Medika baru: tata letak rak bahan, rak T2 bergembok, etalase Ci Lina.</li><li>Layar perjalanan bus.</li><li>Isi panel loket, toko, dan Kantor Pos.</li></ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+const st={season:'kemarau',label:false};
+const drawZ=()=>show('zone',drawTanjung(PAL[st.season],{label:st.label,player:[chr('pF',{dir:'down'}),40,170]}),2);
+drawZ();document.getElementById('tz').addEventListener('click',e=>{const b=e.target;if(b.tagName!=='BUTTON')return;
+  if(b.dataset.s){st.season=b.dataset.s;b.parentNode.querySelectorAll('[data-s]').forEach(q=>q.classList.toggle('on',q===b));}
+  if(b.dataset.l){st.label=!st.label;b.classList.toggle('on',st.label);}drawZ();});
+(()=>{const items=[['Halte',EXT.halteTA],['Bus',busSide()],['Perahu',fishBoat()],['Perahu 2',fishBoat('#c8414b','#ffffff')],['Kelapa',coconutTree(PAL.kemarau,1,1)],['Peti ikan',fishCrate()],['Jaring',netRack()],['Pelampung',lifeRing()],['Tonggak',bollard()],['Camar',gull(0)],['Karton bahan',bahanStack()],['Toko ikan',EXT.tokoIkan]];
+  const W=470,H=150;const[c,x]=cv(W,H);R(x,0,0,W,H,'#e8dcc0');let X=6,Y=6,rowH=0;
+  items.forEach(([n,img])=>{if(X+img.width>W-4){X=6;Y+=rowH+16;rowH=0;}x.drawImage(img,X,Y);T(x,n,X,Y+img.height+2,'#4a230e',8);X+=Math.max(img.width,TW(n,8))+10;rowH=Math.max(rowH,img.height);});
+  show('sprites',c,3);})();
+(()=>{const a=renderRoom('bahari'),b=renderRoom('bahari2');const[c,x]=cv(a.width+b.width+12,Math.max(a.height,b.height));R(x,0,0,c.width,c.height,'#1a0f0c');x.drawImage(a,0,0);x.drawImage(b,a.width+12,0);show('rooms',c,2);})();
+(()=>{const el=document.getElementById('trans');el.width=480;el.height=270;el.style.width='960px';const x=el.getContext('2d');x.imageSmoothingEnabled=false;const t0=performance.now();
+  (function loop(now){const t=((now-t0)/1000)%5;busTransition(x,Math.min(1,t/4),'Rimbasari','Tanjung Arum',7);requestAnimationFrame(loop);})(t0);})();
+const SHOTS=[['fase2f-draf-01-loket-bus','Loket Terminal Rimbasari: tiket Tanjung Arum, jam bus berikutnya, Metrapura terkunci.'],
+ ['fase2f-draf-02-toko-bahan','Bahari Medika, tab Bahan: beli 1–10 paket, harga teman tampil setelah trust (Fase 3a).'],
+ ['fase2f-draf-03-toko-alat','Bahari Medika, tab Alat: T1 sudah lengkap di klinik, alat T2 terkunci sampai 8 challenge.'],
+ ['fase2f-draf-04-pos-pesan','Kantor Pos Rimbasari: pesan antar dari katalog Bahari Medika (ongkir, maks 3 paket, tiba 2 hari).'],
+ ['fase2f-draf-05-pengingat-bus','Pengingat 16:30 di Tanjung Arum (toast) sebelum bus terakhir 17:00.']];
+document.getElementById('panels').innerHTML=SHOTS.map(([f,c])=>'<figure><img class="shot" src="../../production/qa/evidence/'+f+'-2026-11-13.png" alt="'+c+'"><figcaption>'+c+'</figcaption></figure>').join('');
+</script></body></html>

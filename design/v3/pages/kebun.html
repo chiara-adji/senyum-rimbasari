@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kebun Herba & Rumah v3</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.pair figure{margin:0;background:#120c0a;border:1px solid #4a3328;border-radius:8px;padding:8px}
+.pair figcaption{font-size:13px;opacity:.85;margin-top:6px;max-width:440px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+table.t{border-collapse:collapse;font-size:14px}table.t td,table.t th{border:1px solid #4a3328;padding:4px 8px;text-align:left}
+</style></head>
+<body><main>
+<h1>Draf v3 · Fase 2g Kebun herba & Rumah Lv 3–4 (menunggu ACC, 2026-11-13)</h1>
+<p>Gambar lama tidak diubah; draf ini hanya menambah sprite (sumber <code>design/v3/src/kebun.js</code>). Ikon herba memakai <code>herbImg</code> dari mini.js.</p>
+
+<h2>A. Tanaman per tahap (pot, skala 4)</h2>
+<p>Urutan: kosong · bibit · tumbuh · siap panen · layu (belum disiram) · mati (3 hari tidak disiram, atau herba musim lain saat musim berganti). Pot basah = tanah gelap.</p>
+<div class="pair" id="tahap"></div>
+
+<h2>B. Herba per musim (sesuai musim tanamnya di dunia nyata)</h2>
+<table class="t"><tr><th>Musim</th><th>Herba</th><th>Hari</th><th>Bibit</th><th>Alasan</th></tr>
+<tr><td>Kemarau</td><td>Lidah Buaya</td><td>5</td><td>Warung</td><td>Sukulen, tahan kering, busuk akar kalau kebanyakan air</td></tr>
+<tr><td>Kemarau</td><td>Serai Jahe</td><td>5</td><td>Mbah Darmi</td><td>Serai tahan panas & kering</td></tr>
+<tr><td>Hujan</td><td>Mint</td><td>3</td><td>Warung</td><td>Butuh tanah lembap terus</td></tr>
+<tr><td>Hujan</td><td>Sirih</td><td>4</td><td>Warung</td><td>Tanaman rambat, suka lembap & teduh</td></tr>
+<tr><td>Hujan</td><td>Kunyit</td><td>6</td><td>Mbah Darmi</td><td>Rimpang ditanam awal musim hujan</td></tr>
+<tr><td>Hujan</td><td>Cengkeh</td><td>8</td><td>Mbah Darmi</td><td>Bibit cengkeh ditanam saat curah hujan tinggi</td></tr></table>
+<div class="pair" id="ikon" style="margin-top:10px"></div>
+
+<h2>C. Kos Melati kamar 5 · 4 pot di ambang jendela</h2>
+<div class="pair" id="kos"></div>
+
+<h2>D. Kontrakan · rak pot 2 tingkat (8 pot) + gembor</h2>
+<div class="pair" id="kontrak"></div>
+
+<h2>E. Rumah Subsidi & Rumah Estetik · bedeng di halaman depan (12 / 16 petak)</h2>
+<div class="pair" id="halaman"></div>
+</main>
+<script src="lib.js"></script>
+<script>
+function show(host,canvas,cap,scale=2){const f=document.createElement('figure');const c=document.createElement('canvas');c.width=canvas.width*scale;c.height=canvas.height*scale;
+  const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(canvas,0,0,c.width,c.height);f.appendChild(c);const fc=document.createElement('figcaption');fc.textContent=cap;f.appendChild(fc);document.getElementById(host).appendChild(f);}
+const KEYS=['lidah','serai','mint','sirih','kunyit','cengkeh'];
+
+/* A. tabel tahap */
+KEYS.forEach(k=>{const[c,x]=cv(6*13,20);for(let s=0;s<6;s++){x.drawImage(herbPot(k,s,s===1||s===2),s*13,1);}show('tahap',c,HERB[k][0],4);});
+
+/* B. ikon herba + bungkus bibit */
+(()=>{const[c,x]=cv(KEYS.length*40,20);KEYS.forEach((k,i)=>{x.drawImage(herbImg(k),i*40+2,2);x.drawImage(seedImg(k),i*40+20,2);});show('ikon',c,'Ikon herba (mini.js) dan bungkus bibit baru, per pasang: herba · bibit.',3);})();
+
+/* C. Kos: over lama (4 pot 5×3 px) diganti sillPots */
+(()=>{const r=ROOMS3.rumah1,keep=r.over;r.over=[x=>x.drawImage(sillPots([['lidah',3],['lidah',2],['serai',1],null],true),78,18),lampGlow(110,4,12,36)];
+  const img=renderRoom('rumah1');r.over=keep;show('kos',img,'Kamar 5 (240×168): 4 pot di ambang jendela. Contoh: Lidah Buaya siap, Lidah Buaya tumbuh, Serai Jahe bibit, pot kosong. Berdiri di bawah jendela + E = panel Kebun.');
+  const[c,x]=cv(36,20);x.drawImage(sillPots([['lidah',3],['lidah',4],['serai',5],null]),0,0);show('kos',c,'Kering: layu & mati.',4);})();
+
+/* D. Kontrakan: rak di dinding antara nakas dan dapur, gembor di sampingnya */
+(()=>{const r=ROOMS3.rumah2,keep=r.items;const plants=[['mint',3],['mint',3],['sirih',2],['sirih',1],['kunyit',2],['cengkeh',1],null,['mint',5]];
+  r.items=()=>[...keep(),[rakPot(plants,true),74,26],[gembor(),120,56]];const img=renderRoom('rumah2');r.items=keep;
+  show('kontrak',img,'Kontrakan (288×184) Musim Hujan: rak pot di bawah jendela, gembor di sampingnya. Berdiri di depan rak + E = panel Kebun.');
+  show('kontrak',rakPot(plants,true),'Rak pot (44×40).',4);})();
+
+/* E. Kampung Asri kiri: rumah Lv 3 / Lv 4 + bedeng di samping kanan */
+function zoneWith(lv,cols,rows,plants,pal){const keep=EXT.rumah3,img=EXT['rumah'+lv];EXT.rumah3=img;const b=bedeng(cols,rows,plants,pal===PAL.hujan);
+  const X=58,Y=228;const cfg={...ZONES.kampung,props:[...ZONES.kampung.props,[b,X,Y],[gembor(),X+b.width+2,Y+b.height-12]]};
+  const z=drawZone(cfg,pal);EXT.rumah3=keep;const[c,x]=cv(300,210);x.drawImage(z,0,-90);return[c,b,X,Y];}
+(()=>{const p12=[['lidah',3],['lidah',3],['serai',2],['serai',1],['lidah',2],null,['serai',3],['lidah',4],null,null,['serai',5],['lidah',1]];
+  const[c,b,X,Y]=zoneWith(3,4,3,p12,PAL.kemarau);show('halaman',c,'Rumah Subsidi (Lv 3), Musim Kemarau: bedeng 4×3 di halaman seberang jalan depan rumah (samping rumah tidak cukup lebar untuk Lv 4) (x'+X+', y'+Y+'), gembor di sebelahnya. E di depan bedeng = panel Kebun.',2);
+  const p16=[['mint',3],['mint',3],['mint',2],['sirih',3],['sirih',2],['kunyit',3],['kunyit',2],['cengkeh',3],['cengkeh',2],['cengkeh',1],['mint',1],['sirih',1],null,['kunyit',1],null,['mint',3]];
+  const[c2,b2,X2,Y2]=zoneWith(4,4,4,p16,PAL.hujan);show('halaman',c2,'Rumah Estetik (Lv 4), Musim Hujan: bedeng 4×4 (x'+X2+', y'+Y2+'), tanah basah.',2);
+  show('halaman',b2,'Bedeng 16 petak (50×52).',4);})();
+</script>
+</body></html>

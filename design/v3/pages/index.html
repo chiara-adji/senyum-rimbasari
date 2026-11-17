@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Draf Visual v3</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3</h1>
+  <nav><a class="on" href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Semua elemen untuk di-acc sebelum Fase 1. Semua gambar dibuat lewat kode, tanpa aset luar.</p>
+  <div class="frame"><canvas id="hero"></canvas></div>
+  <h2>Perubahan dari v2</h2>
+  <table>
+    <tr><th>Masukanmu</th><th>Yang dibuat di v3</th><th>Halaman</th></tr>
+    <tr><td>Kepala kebesaran, wajah kurang detail</td><td>Kepala 16×13 (dari 18×15). Mata 3×4 dengan kelopak, iris berwarna, dan kilau. Ditambah alis, hidung, pipi, telinga, bulu mata, kumis, jenggot, keriput, 9 ekspresi, dan tampak depan/belakang/samping.</td><td><a href="karakter.html">Karakter</a></td></tr>
+    <tr><td>Semua karakter utama + NPC</td><td>3 preset pemain dan 45 NPC: 8 romance, 12 warga, 9 kandidat staf, 12 pasien spesial, dan 4 tokoh luar kota.</td><td><a href="karakter.html">Karakter</a></td></tr>
+    <tr><td>Romance pria harus setara dokter gigi</td><td>Adji (akuntan), <b>Arya → insinyur sipil</b>, <b>Raka → Ipda Raka, polisi kota</b>, <b>Galih → dr. Galih, dokter umum Puskesmas</b>. Bengkel Motor dan Bengkel Kayu diganti Pos Polisi dan Kantor Konsultan Teknik.</td><td><a href="bangunan.html">Bangunan</a></td></tr>
+    <tr><td>Interior jadi 4 level</td><td>Klinik: tahap 0 Ruko Tua, lalu Lv 1–4 sesuai urutanmu (plang kecil → lampu → neon → 2 lantai + neon besar). Lv 4 punya 2 interior (lantai 1 dan lantai 2).</td><td><a href="bangunan.html">Bangunan</a></td></tr>
+    <tr><td>Rumah jadi tempat tinggal, eksterior Lv 1–4</td><td>Kamar Sewa (gratis) → Kontrakan (2jt/30 hari) → Rumah Subsidi (50jt) → Rumah Estetik (150jt). Masing-masing punya eksterior dan interior.</td><td><a href="bangunan.html">Bangunan</a></td></tr>
+    <tr><td>Detail semua bangunan</td><td>27 eksterior + 31 interior, termasuk 2 toko di kota lain. Angkringan berupa area terbuka.</td><td><a href="bangunan.html">Bangunan</a></td></tr>
+    <tr><td>Peta lengkap</td><td>Peta kota dan 4 zona penuh (768×432, kamera mengikuti pemain), bisa dilihat versi Kemarau dan Hujan, plus animasi transisi.</td><td><a href="peta.html">Peta</a></td></tr>
+    <tr><td>Teks minigame buram</td><td>Font piksel 5×7 buatan sendiri, tajam di semua skala. Teks selalu di atas panel polos.</td><td><a href="ui.html">UI & Minigame</a></td></tr>
+  </table>
+  <h2>Keputusan yang perlu kamu konfirmasi</h2>
+  <div class="note"><ol>
+    <li><b>Efek rumah</b> (kamu baru menentukan harganya, efeknya usulan saya):
+      <ul>
+        <li>Kamar Sewa: energi pulih 70%, 4 pot herba</li>
+        <li>Kontrakan: energi pulih 100%, kebun 8 petak. Sewa dibayar otomatis tiap 30 hari; kalau saldo kurang, pemain kembali ke Kamar Sewa.</li>
+        <li>Rumah Subsidi: energi maks +20, kebun 12 petak, bisa undang makan malam, jadi syarat lamaran</li>
+        <li>Rumah Estetik: energi maks +30, kebun 16 petak, stres −10 setiap bangun tidur</li>
+      </ul></li>
+    <li><b>Bonus menikah untuk romance yang baru:</b>
+      <ul>
+        <li>Arya (insinyur): upgrade klinik/rumah −25% dan lebih cepat</li>
+        <li>Ipda Raka (polisi): kasus Pak Joni selesai lebih cepat, trust tidak turun saat ada klaim pasien</li>
+        <li>dr. Galih (dokter umum): risiko komplikasi pasien dengan riwayat medis −50%</li>
+      </ul></li>
+    <li><b>Ukuran zona 768×432</b> yang bisa digulir. Alternatifnya tetap 1 layar per zona.</li>
+  </ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+(()=>{const ids=['pF','adji','arya','raka','galih','wulan','nadia','sekar','laras','harjo','ratna','darmi','dimas'];const[c,x]=cv(ids.length*26+4,36);ids.forEach((k,i)=>drawChar(x,CH[k],2+i*26,2));show('hero',c,3);})();
+</script></body></html>

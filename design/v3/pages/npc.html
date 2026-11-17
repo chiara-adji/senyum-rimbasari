@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NPC & Trust v3</title><link rel="stylesheet" href="style.css">
+<style>.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}.pair figure{margin:0}.pair figcaption{font-size:13px;opacity:.85;margin-top:6px;max-width:470px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}.shot{width:480px;max-width:100%;image-rendering:pixelated;border:1px solid #4a3328;border-radius:6px}
+table{border-collapse:collapse;font-size:14px;margin:6px 0}td,th{border:1px solid #4a3328;padding:3px 8px;text-align:left}</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · NPC & Trust (Fase 3a-1)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="makan.html">Masak & Makan</a><a class="on" href="npc.html">NPC & Trust</a></nav>
+  <p><b>DRAF, menunggu ACC.</b> Fase 3a-1: NPC tampil sesuai jadwal, berjalan masuk/keluar lewat pintu, ngobrol (dialog harian 07a/07b/07c), trust +3/hari, Buku Kenalan. Sprite NPC memakai CAST v3 yang sudah ACC (tidak ada gambar karakter baru). Sumber aset baru: <code>design/v3/src/npc.js</code>. Panel di bawah digambar dengan mesin UI HD game yang sudah ada (mock, angka trust contoh).</p>
+
+  <h2>1. Penanda di atas kepala NPC</h2>
+  <div class="frame"><canvas id="mark"></canvas></div>
+  <p class="cap">Kiri ke kanan: <b>…</b> belum diajak ngobrol hari ini · <b>!</b> adegan Trust siap (ambang 20/40/60/80) · <b>♥</b> event romance siap. Ukuran 11×9 piksel dunia, bergoyang naik-turun pelan. Hilang setelah diajak bicara.</p>
+
+  <h2>2. Tingkat Trust & potret</h2>
+  <div class="frame"><canvas id="tier"></canvas></div>
+  <p class="cap">Warna tingkat: Asing · Kenal · Akrab · Percaya · Sahabat (GDD §9). Potret = kepala + bahu sprite CAST (24×22), ×2 di dialog dan kartu, ×1 di ubin Buku Kenalan. NPC yang belum dikenal tampil sebagai siluet.</p>
+
+  <h2>3. Dialog & Buku Kenalan (mesin UI HD)</h2>
+  <div class="pair" id="panels"></div>
+
+  <h2>4. NPC di dunia & berjalan lewat pintu</h2>
+  <div class="pair" id="world"></div>
+
+  <div class="note"><b>Yang perlu kamu review:</b><ol>
+    <li>Kotak dialog berpotret: nama + chip tingkat Trust (+ ♥ Hubungan untuk kandidat romance).</li>
+    <li>Buku Kenalan (hotkey <b>K</b> + menu Esc): ubin per kelompok, ✓ sudah ngobrol hari ini, kartu detail (Trust + garis ambang, Hubungan + garis ambang event, lokasi sekarang, selera hadiah yang terungkap bertahap). Teks ringkas di kartu ditulis untuk pemain (tanpa membocorkan rahasia).</li>
+    <li>3 penanda kepala.</li>
+    <li>Gerak: NPC dan staf selalu berjalan dari pintu/gerbang ke posisinya dan kembali (contoh: staf klinik masuk 07:30 lewat pintu, berjalan ke meja resepsionis dan kursi dental).</li>
+  </ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+function big(id,c,k){const el=document.getElementById(id);el.width=c.width*k;el.height=c.height*k;el.style.maxWidth='100%';const g=el.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0,el.width,el.height);}
+(()=>{const[c,x]=cv(150,44);R(x,0,0,150,44,'#5f8f4a');['talk','scene','love'].forEach((k,i)=>{const X=14+i*46;x.drawImage(MARK[k],X+7,4);x.drawImage(chr(['ratna','harjo','adji'][i]),X,12);});big('mark',c,4);})();
+(()=>{const[c,x]=cv(330,58);R(x,0,0,330,58,'#e8dcc0');NPC_TIER.forEach(([v,n,col],i)=>{const X=8+i*64;R(x,X,4,56,10,col);T(x,n,X+4,6,'#ffffff',9);T(x,'Trust '+v,X+4,18,'#4a230e',9);x.drawImage(npcBust(['dimas','tari','harjo','wiryo','slamet'][i]),X+16,30);});big('tier',c,3);})();
+const box=(id,list)=>document.getElementById(id).innerHTML=list.map(([f,c])=>'<figure><img class="shot" src="../../production/qa/evidence/'+f+'-2026-11-13.png" alt="'+c+'"><figcaption>'+c+'</figcaption></figure>').join('');
+box('panels',[['fase3a-draf-01-dialog-potret','Ngobrol dengan kandidat romance: potret, chip Kenal, ♥ Hubungan. Trust +3 (sekali sehari) tampil sebagai toast.'],
+ ['fase3a-draf-07-dialog-warga','Ngobrol dengan warga (Mbah Darmi, Kenal). Baris diambil dari 07a sesuai kondisi; baris yang sudah keluar 7 hari terakhir tidak diulang.'],
+ ['fase3a-draf-02-buku-kenalan-romance','Buku Kenalan · Adji: Trust Akrab 52 + Hubungan 38 (garis = ambang E1–E5: 20/35/50/70/85).'],
+ ['fase3a-draf-03-buku-kenalan-warga','Buku Kenalan · Pak Harjo: Akrab 46, belum ngobrol hari ini, satu kesukaan sudah terungkap.'],
+ ['fase3a-draf-04-buku-kenalan-belum-kenal','NPC yang belum pernah diajak bicara: siluet + "?".']]);
+box('world',[['fase3a-draf-05-alun-npc-penanda','Alun-alun 16:00: Bu Ratna keluar dari warung (…), Adji berjalan ke Kedai (♥), Pak Harjo keliling sore (!), Kakek Wiryo di meja catur (…), Mas Ilham lewat (sudah diajak ngobrol, tanpa penanda).'],
+ ['fase3a-draf-06-staf-masuk-pintu','Klinik 07:35: Rina baru masuk dari pintu bawah berjalan ke kursi dental, Putri berjalan ke meja resepsionis (dulu muncul tiba-tiba di posisinya).']]);
+</script></body></html>

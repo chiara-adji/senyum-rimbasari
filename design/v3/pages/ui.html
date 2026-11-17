@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UI v3</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · UI & Minigame</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a class="on" href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Semua teks sekarang memakai font piksel 5×7 buatan sendiri. Setiap huruf digambar per piksel, jadi tidak ada lagi tepi buram. Teks selalu diletakkan di atas panel polos, bukan langsung di atas latar ramai. Semua layar ditampilkan 2× dari resolusi asli 480×270.</p>
+  <h2>1. Font piksel</h2>
+  <div class="frame"><canvas id="font"></canvas></div>
+  <p class="cap">Ukuran normal (1×) untuk isi teks, ukuran besar (2×) untuk judul. Ada varian tebal, bayangan, dan garis tepi.</p>
+  <h2>2. Minigame: Tambal Komposit (langkah Preparasi)</h2>
+  <div class="frame"><canvas id="treat"></canvas></div>
+  <p class="cap">Perbandingan dengan v1: label lapisan gigi dan instruksi sekarang di dalam panel gelap, info pasien di panel kertas, nama alat di bawah ikon, dan odontogram diberi nomor gigi.</p>
+  <h2>3. Dialog dengan potret (Event Adji #4)</h2>
+  <div class="frame"><canvas id="dialog"></canvas></div>
+  <h2>4. HUD di klinik</h2>
+  <div class="frame"><canvas id="hud"></canvas></div>
+  <div class="note"><b>Yang perlu kamu review:</b><ol><li>Teks sudah mudah dibaca?</li><li>Ukurannya cukup, atau mau semua teks isi pakai ukuran besar (2×)?</li></ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+// 1. font
+(()=>{const[c,x]=cv(480,150);R(x,0,0,480,150,'#2a1d19');panel(x,4,4,472,142,'paper');
+  T(x,'ABCDEFGHIJKLMNOPQRSTUVWXYZ',12,10,'#4a230e');T(x,'abcdefghijklmnopqrstuvwxyz',12,22,'#4a230e');T(x,'0123456789 .,:;!?-+/()%·×=▶★♥ Rp 15.250.000',12,34,'#4a230e');
+  T(x,'Tebal: Klinik Gigi drg. Nadia',12,48,'#4a230e',9,null,true);T(x,'Bayangan: Senin · 09:10',12,60,'#4a230e',9,'#e8b070');
+  R(x,250,46,214,26,'#1b2f38');TO(x,'Garis tepi di latar gelap',258,54,'#ffe9c8','#0a1418');
+  T(x,'JUDUL 2× Senyum',12,76,'#3a1a08',12,'#e8b070');T(x,'Kampung Asri',12,100,'#a8202a',12);
+  T(x,'Pak Harjo: "Selamat datang di Rimbasari, Dok."',12,128,'#4a230e');show('font',c,2);})();
+// 2. minigame
+(()=>{const W=480,H=270;const[c,x]=cv(W,H);
+  for(let j=0;j<H;j++)R(x,0,j,W,1,j<135?'#1f3640':'#1a2d36');for(let i=0;i<W;i+=16)R(x,i,0,1,H,'#22404b');for(let j=0;j<H;j+=16)R(x,0,j,W,1,'#22404b');
+  // header
+  panel(x,4,4,472,24);T(x,'Tambal Komposit',12,11,'#4a230e',9,'#ffd9a0',true);T(x,'Langkah 2/5 · Preparasi karies',118,11,'#6a3416');
+  for(let i=0;i<5;i++){disc(x,410+i*13,15,4,'#4a2410');disc(x,410+i*13,15,3,i<1?'#5ccf4a':i===1?'#ffd23a':'#9a5a3a');}
+  // area gigi
+  R(x,92,34,166,160,'#14242c');R(x,93,35,164,158,'#1b2f38');x.drawImage(toothSection(),114,46);
+  const rr=rng(5);for(let k=0;k<14;k++){P(x,162+rr()*26,54+rr()*18,k%3?'#8a5428':'#fff6c8');}x.drawImage(handpiece(),172,20);
+  // label lapisan: panel gelap kecil + garis penunjuk
+  const tag=(t,X,Y,col,lx,ly)=>{const w=TW(t)+8;R(x,X,Y,w,13,'#0a1418');R(x,X,Y,w,1,col);T(x,t,X+4,Y+3,col);line(x,X+w,Y+6,lx,ly,1,col);};
+  tag('Email',8,54,'#f7f4ec',124,60);tag('Dentin',8,90,'#efd9a6',128,96);tag('Pulpa',8,118,'#ff8a96',160,116);tag('Karies',262,44,'#e8a060',180,58);tag('Batas pulpa',262,118,'#ff3a4e',194,112);
+  // panel pasien
+  panel(x,346,34,130,70,'paper');T(x,'Bu Lastri, 52 th',354,40,'#4a230e',9,null,true);
+  R(x,354,54,10,10,'#ef5a4a');T(x,'!',358,56,'#ffffff',9,null,true);T(x,'Diabetes',368,56,'#a8202a',9,null,true);
+  T(x,'Dx: Karies dentin',354,70,'#4a230e');T(x,'Gigi 36 · Bor low-speed',354,82,'#6a3416');T(x,'Alat Tier 1',354,92,'#6a3416');
+  // bar
+  panel(x,346,108,130,48,'paper');T(x,'Sakit',354,114,'#4a230e',9,null,true);bar(x,396,115,72,8,.35,'#ef5a4a');
+  T(x,'Karies',354,128,'#4a230e',9,null,true);bar(x,396,129,72,8,.62,'#a8682a');T(x,'✓ Pulpa aman',354,142,'#2e8a3a',9,null,true);
+  // baki alat
+  panel(x,346,160,130,74,'paper');T(x,'Baki alat',354,165,'#4a230e',9,null,true);
+  const tools=[['Sonde',(x,X,Y)=>{for(let i=0;i<12;i++)P(x,X+2+i,Y+14-i,'#6a7484');P(x,X+13,Y+2,'#ffffff');}],['Bor',(x,X,Y)=>{for(let i=0;i<10;i++)R(x,X+2+i,Y+12-i,3,3,'#9aa3b0');P(x,X+2,Y+15,'#555');}],['Bius',(x,X,Y)=>{R(x,X+1,Y+7,11,4,'#e6ebf0');R(x,X+12,Y+8,4,2,'#9aa3b0');R(x,X,Y+6,2,6,'#3a7fc4');R(x,X+3,Y+8,6,2,'#9ad0f0');}],
+    ['Etsa',(x,X,Y)=>{R(x,X+2,Y+6,10,5,'#4a8ad8');R(x,X+12,Y+7,4,3,'#c9d0da');}],['Bonding',(x,X,Y)=>{R(x,X+4,Y+3,7,10,'#e8c547');R(x,X+5,Y+1,5,2,'#5a5a64');}],['Sinar',(x,X,Y)=>{R(x,X+1,Y+6,10,6,'#5a5f6a');R(x,X+11,Y+5,4,8,'#3a4aa8');R(x,X+15,Y+7,2,4,'#7aa0ff');}]];
+  tools.forEach(([lbl,draw],i)=>{const X=352+(i%2)*62,Y=176+Math.floor(i/2)*19;const a=i===1;R(x,X,Y,20,18,a?'#ffd23a':'#4a2410');R(x,X+1,Y+1,18,16,a?'#fff7d4':'#f4c88a');draw(x,X+2,Y+1);T(x,lbl,X+21,Y+5,a?'#a8202a':'#4a230e',9,null,a);});
+  // instruksi
+  R(x,92,198,166,30,'#0a1418');R(x,92,198,166,1,'#ffd23a');T(x,'Tahan klik & gosok area coklat.',98,204,'#ffe9c8');T(x,'Jangan sentuh garis merah!',98,216,'#ff8a96',9,null,true);
+  // odontogram
+  panel(x,4,236,472,30,'paper');T(x,'Odontogram',10,242,'#4a230e',9,null,true);
+  const nums=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];const low=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+  for(let r=0;r<2;r++)for(let k=0;k<16;k++){const X=84+k*24+(k>7?6:0),Y=240+r*12;R(x,X,Y,20,10,'#4a230e');R(x,X+1,Y+1,18,8,'#fbfbf6');const n=String((r?low:nums)[k]);
+    let tc='#8a7a6a';if(r===1&&k===13){R(x,X-1,Y-1,22,12,'#ffd23a');R(x,X+1,Y+1,18,8,'#ffe9a0');tc='#a8202a';}if(r===0&&k===3){R(x,X+1,Y+1,18,8,'#d8dde4');}if(r===1&&k===1){R(x,X+1,Y+1,18,8,'#f2d8c8');tc='#a8202a';}
+    T(x,n,X+4,Y+2,tc);}
+  show('treat',c,2);})();
+// 3. dialog
+(()=>{const W=480,H=270;const z=drawZone(ZONES.alun,PAL.kemarau);const[c,x]=cv(W,H);x.drawImage(z,40,40,480,270,0,0,480,270);x.fillStyle='rgba(30,12,8,.45)';x.fillRect(0,0,W,H);
+  panel(x,236,72,240,74,'paper');const ch=['Jujur: "Aku lagi capek banget..."','"Makan bareng yuk!"','"Nanti aja, pasien masih antri."'];
+  ch.forEach((t,i)=>{const Y=80+i*21;if(i===0){R(x,242,Y-3,228,18,'#ffd78a');R(x,242,Y-3,228,1,'#fff2c8');T(x,'▶',247,Y+2,'#a8202a',9,null,true);}T(x,t,258,Y+2,'#4a230e',9,null,i===0);});
+  panel(x,4,170,472,96);
+  // potret 2× (crop kepala & bahu)
+  R(x,12,178,76,80,'#4a2410');R(x,13,179,74,78,'#9a4e1c');for(let j=0;j<74;j++)R(x,14,180+j,72,1,j<37?'#f6dcb0':'#ecc690');
+  const a=chr('adji',{expr:'happy'});x.save();x.beginPath();x.rect(14,180,72,74);x.clip();x.drawImage(a,0,0,24,32,14,180,72,96);x.restore();
+  panel(x,12,240,76,20,'paper');TC(x,'Adji',50,246,'#4a230e',9,null,true);
+  R(x,96,178,372,80,'#fbe6b8');R(x,96,178,372,1,'#ffffff80');
+  ['"Dok, kamu udah makan belum? Dari pagi aku lihat','lampu klinik nyala terus. Nih, aku bawain nasi','bungkus. Jangan sampai kamu yang sakit, ya."'].forEach((t,i)=>T(x,t,104,186+i*14,'#4a230e'));
+  T(x,'Hubungan',306,240,'#6a3416');x.drawImage(IC.heart,356,236);bar(x,374,240,84,8,.68,'#e6383e');
+  show('dialog',c,2);})();
+// 4. HUD
+(()=>{const room=renderRoom('klinik2',{chars:[[CH.pF,100,86],[CH.rina,30,92],[chr('harjo',{expr:'sad'}),92,118]]});const[c,x]=cv(480,270);R(x,0,0,480,270,'#1a0f0c');x.drawImage(room,104,58);
+  x.drawImage(glow(dentalUnitV(2)),104+33,58+57);hud2(x,480,270,'Kemarau',7,'Senin · 09:10',ICS,'Klinik Gigi');promptBox(x,104+66,58+40,'Periksa pasien');
+  panel(x,4,236,128,30);x.drawImage(IC.tooth,9,243);T(x,'Antrian 2/5',28,246,'#4a230e',9,'#ffd9a0',true);show('hud',c,2);})();
+</script></body></html>

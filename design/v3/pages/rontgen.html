@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rontgen Periapikal</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Rontgen Periapikal (Fase 2e)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="gigi.html">Gigi Potongan v2</a><a class="on" href="rontgen.html">Rontgen</a></nav>
+  <p>Foto rontgen periapikal dibuat dari geometri gigi v2 (<code>toothR</code>), digambar menurut kepadatan jaringan: email paling terang, lalu dentin dan tulang. Pulpa, ruang ligamen, karies, dan lesi tampak gelap (radiolusen). Fungsi baru di <code>mini.js</code>: <code>toothXR(o, s)</code> dan <code>xrFilm(gambar, w, h)</code>. Revisi user 2026-11-12: nekrosis pulpa = karies sampai pulpa + pelebaran ruang ligamen di ujung akar; abses = radiolusen periapikal berbatas difus. Revisi 3 (2026-11-13): bentuk film mengikuti jenis gigi. Insisif bertepi insisal datar, berakar tunggal dan pulpa runcing. Kaninus bertonjol runcing dengan akar paling panjang. Premolar bertonjol satu dengan dua tanduk pulpa dan akar tunggal. Molar bawah berakar 2, molar atas 3 (akar palatal bertumpuk). Film gigi atas dibalik: mahkota di bawah, akar ke atas. Revisi 2: periodontitis berat = tulang dan gusi (jaringan lunak di atas tulang) sama-sama turun; persistensi = benih gigi tetap sudah bertumpuk dengan akar gigi susu dan menembus puncak tulang alveolar (indikasi cabut gigi susu).</p>
+
+  <h2>1. Film per jenis gigi (normal)</h2>
+  <div class="frame"><canvas id="jenis"></canvas></div>
+  <p class="cap">Baris atas: rahang bawah (31 insisif, 33 kaninus, 34 premolar, 36 molar). Baris bawah: rahang atas (11, 13, 14, 16), film dibalik seperti foto periapikal gigi atas.</p>
+
+  <h2>1b. Film per diagnosis</h2>
+  <div class="frame"><canvas id="grid"></canvas></div>
+  <p class="cap">Teks di bawah tiap film = temuan yang ditulis di log pemeriksaan saat pemain memotret gigi bermasalah. Gigi lain menampilkan film "Normal".</p>
+
+  <h2>2. Detail resolusi 2× (HD)</h2>
+  <div class="frame"><canvas id="hd"></canvas></div>
+  <p class="cap">Kiri: pulpitis ireversibel (karies menembus atap pulpa). Tengah: nekrosis (karies sampai pulpa, ruang ligamen apikal melebar). Kanan: abses (lusen di ujung akar, memudar ke tulang tanpa garis tepi).</p>
+
+  <h2>3. Di layar Periksa</h2>
+  <p>Alat ke-8 "Rontgen" (ikon <code>IC.xray</code>) di baris alat langkah ② Periksa. Klik alat lalu gigi: 5 menit game, biaya ditagih ke pasien. Film digambar 2× (HD) di panel kanan layar Periksa, temuan masuk log seperti alat lain. Tata letak panel mengikuti layar Periksa HD yang sudah ada; bukti layar menyusul setelah kode.</p>
+<script src="lib.js"></script>
+<script>
+"use strict";
+const lab=(x,t,X,Y,col,sz)=>{x.font=(sz||'bold 13px')+' Segoe UI, sans-serif';x.fillStyle='#000a';x.fillText(t,X+1,Y+1);x.fillStyle=col||'#f5e8d8';x.fillText(t,X,Y);};
+const V=[
+ ['Normal (sehat, gingivitis)',{},'Tidak tampak kelainan'],
+ ['Karies dentin (premolar)',{type:'P',caries:'shallow'},'Lusen di dentin, jauh dari pulpa'],
+ ['Karies proksimal (premolar)',{type:'P',caries:'prox'},'Lusen di sela gigi (karies proksimal)'],
+ ['Pulpitis reversibel',{caries:'deep'},'Lusen dalam, masih ada dentin'],
+ ['Pulpitis ireversibel',{caries:'pulp'},'Lusen mencapai pulpa'],
+ ['Nekrosis pulpa',{caries:'pulp',lesion:'pdl'},'Lusen sampai pulpa + ligamen apikal melebar'],
+ ['Abses periapikal',{caries:'pulp',lesion:'abses'},'Lusen sampai pulpa + lusen apikal difus'],
+ ['Sisa akar',{crown:false},'Mahkota hilang, tinggal akar'],
+ ['Periodontitis ringan-sedang (insisif)',{type:'I',bone:.25},'Tulang turun sedikit, gusi ikut turun'],
+ ['Periodontitis berat (insisif)',{type:'I',bone:.75},'Tulang dan gusi turun jauh'],
+ ['Gigi susu persistensi',{type:'I',bud:true},'Benih gigi tetap menembus puncak tulang'],
+];
+// 0. jenis gigi
+(()=>{const fw=170*1.2,fh=196*1.2,cw=fw+24,chh=fh+30,c=document.getElementById('jenis');c.width=4*cw+14;c.height=2*chh+10;const x=c.getContext('2d');
+  x.fillStyle='#1a2a2a';x.fillRect(0,0,c.width,c.height);
+  [['31 Insisif','I'],['33 Kaninus','C'],['34 Premolar','P'],['36 Molar','M']].forEach(([t,ty],n)=>[0,1].forEach(r=>{const X=14+n*cw,Y=24+r*chh;
+    x.drawImage(xrFilm(toothXR({type:ty,upper:!!r},2),fw,fh),X,Y);lab(x,r?t.replace(/^3/,'1').replace('16','16').replace(/^1(d)/,(m,d)=>'1'+d)+' (atas)':t,X,Y-6);}));})();
+// 1. grid
+(()=>{const fw=170*1.4,fh=196*1.4,cols=4,cw=fw+28,chh=fh+54,c=document.getElementById('grid');c.width=cols*cw+14;c.height=Math.ceil(V.length/cols)*chh+10;const x=c.getContext('2d');
+  x.fillStyle='#1a2a2a';x.fillRect(0,0,c.width,c.height);
+  V.forEach(([t,o,f],n)=>{const X=14+(n%cols)*cw,Y=24+Math.floor(n/cols)*chh;x.drawImage(xrFilm(toothXR(o,2),fw,fh),X,Y);lab(x,t,X,Y-6);lab(x,f,X,Y+fh+16,'#9ad8c8','12px');});})();
+// 2. HD
+(()=>{const k=1.6,c=document.getElementById('hd');c.width=3*(340*k+14)+14;c.height=392*k+20;const x=c.getContext('2d');x.fillStyle='#1a2a2a';x.fillRect(0,0,c.width,c.height);
+  [{caries:'pulp'},{caries:'pulp',lesion:'pdl'},{caries:'pulp',lesion:'abses'}].forEach((o,n)=>x.drawImage(xrFilm(toothXR(o,2),340*k,392*k),14+n*(340*k+14),10));})();
+</script></body></html>

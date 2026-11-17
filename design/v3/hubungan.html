@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hubungan v3</title><style>
+:root{--bg:#1d1412;--card:#2a1d19;--ink:#f5e8d8;--muted:#c4a88c;--accent:#f0a24a;--line:#4a3328}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Segoe UI",system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:20px;margin:40px 0 6px;color:var(--accent)}
+p{margin:4px 0 10px;color:var(--muted)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+nav a{color:var(--ink);background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:8px;text-decoration:none;font-size:14px}
+nav a.on{background:var(--accent);color:#2a1408;border-color:var(--accent)}
+.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}.pair figure{margin:0}.pair figcaption{font-size:13px;opacity:.85;margin-top:6px;max-width:480px}
+.shot{width:480px;max-width:100%;image-rendering:pixelated;border:1px solid #4a3328;border-radius:6px;display:block}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin-top:16px}
+.note li{margin:3px 0}
+table{border-collapse:collapse;font-size:14px;margin:6px 0}td,th{border:1px solid #4a3328;padding:3px 8px;text-align:left;vertical-align:top}th{background:var(--card)}
+code{color:#ffd86a}
+</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Nongkrong (Fase 3a-3)</h1>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Hubungan, Hadiah, Event E1–E5 (Fase 3a-4)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="npc.html">NPC</a><a href="makan.html">Masak & Makan</a><a href="nongkrong.html">Nongkrong</a><a class="on" href="hubungan.html">Hubungan</a></nav>
+  <p><b>ACC user 2026-11-15 ("ACC, kerjakan"), sudah dipasang di game.</b> Usulan 3a-4 sudah di-ACC ("ACC semua", 2026-11-15). Semua gambar diambil dari game (<code>?uji=klinik2</code>, contoh: pemain wanita, Adji). Ini UI saja: efek Trust/Hubungan, jadwal janji, dan teks event semua kandidat ditulis setelah draf ini di-ACC.</p>
+
+  <h2>1. Ikon barang hadiah (12 baru, 16×16)</h2>
+  <figure><img class="shot" style="width:780px" src="../../production/qa/evidence/fase3a4-draf-00-ikon-hadiah-2026-11-15.png" alt="ikon"><figcaption>Gaya sama dengan ikon bahan makanan. Bahan, bekal, dan herba yang sudah ada juga bisa dikasih.</figcaption></figure>
+  <table><tr><th>Tempat</th><th>Barang</th><th>Harga</th><th>Cara beli</th></tr>
+    <tr><td>Toko Roti Manis (07-17)</td><td>Roti Manis</td><td>10rb</td><td rowspan="4">Tombol <b>Beli Bungkus</b> di panel nongkrong/membaca</td></tr>
+    <tr><td>Kedai Kopi Seduh (08-22)</td><td>Kopi Susu</td><td>25rb</td></tr>
+    <tr><td>Angkringan (18-24)</td><td>Kopi Tubruk · Wedang Jahe · Gorengan</td><td>5rb</td></tr>
+    <tr><td>Perpustakaan & Kebun Bunga (09-19)</td><td>Bunga · Buku Bekas</td><td>10rb · 15rb</td></tr>
+    <tr><td>Warung Bu Ratna (06-21)</td><td>Teh Melati · Es Teh</td><td>5rb · 4rb</td><td>Ikut daftar panel Warung</td></tr>
+    <tr><td>Bahari Medika, Tanjung Arum (08-17)</td><td>Kartu Pos · Biji Kopi · Kain</td><td>5rb · 40rb · 30rb</td><td>E di depan <b>etalase Ci Lina</b> (kanan bawah)</td></tr>
+  </table>
+
+  <h2>2. Penanda ♥ dan tombol G</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-01-penanda-hati-2026-11-15.png" alt="hati"><figcaption>♥ merah muda di atas kepala = event siap (atau dia sedang menunggu di tempat janji). Urutan penanda: ♥ lebih dulu dari ! (adegan Trust) dan … (belum ngobrol).</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-02-prompt-hadiah-2026-11-15.png" alt="prompt"><figcaption>Di dekat orang yang sudah dikenal: <b>E Ngobrol · Adji · G Beri Hadiah</b>.</figcaption></figure>
+  </div>
+
+  <h2>3. Beri Hadiah</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-03-beri-hadiah-2026-11-15.png" alt="hadiah"><figcaption>Potret, tingkat Trust, ♥ Hubungan (khusus kandidat romance, garis = ambang E1-E5, titik di bawah garis = event sudah ditonton). Kisi isi Tas. Bawah: selera yang sudah ketahuan ("Adji suka ini" hijau / "tidak suka ini" merah / belum ketahuan). Tombol <b>Kasih</b> · Batal. Tinggi panel ikut jumlah baris.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-04-reaksi-hadiah-2026-11-15.png" alt="reaksi"><figcaption>Reaksi dengan suara NPC (3 baris per orang: suka/biasa/tidak suka, ditulis di file narasi baru). Setelah itu toast "Adji suka · Trust +5 · ♥ +6".</figcaption></figure>
+  </div>
+
+  <h2>4. Beli Bungkus</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-05-angkringan-beli-bungkus-2026-11-15.png" alt="angkringan"><figcaption>Panel nongkrong mendapat tombol <b>Beli Bungkus</b> (Kedai, Angkringan, Toko Roti, Perpustakaan).</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-06-beli-bungkus-2026-11-15.png" alt="bungkus"><figcaption>Pilih barang, <b>Beli 1</b> (panel tetap terbuka). Tombol mati: "Buka 18-24", "Uang kurang", "Tas penuh".</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-14-etalase-ci-lina-2026-11-15.png" alt="lina"><figcaption>Bahari Medika: etalase Ci Lina (perhiasan) juga menjual oleh-oleh. Di 3a-5 etalase ini dipakai untuk cincin.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-15-oleh-oleh-2026-11-15.png" alt="oleh"><figcaption>Oleh-oleh Tanjung Arum.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-16-tas-hadiah-2026-11-15.png" alt="tas"><figcaption>Barang hadiah masuk Tas (memakai isi 12). Saat dipasang: judul jadi "Isi Tas", info barang hadiah = "bisa dijadikan hadiah (G di dekat orang)", dan kisi pindah ke baris kedua kalau jenisnya lebih dari 10.</figcaption></figure>
+  </div>
+
+  <h2>5. Buku Kenalan · tab Romance</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-07-buku-kenalan-romance-2026-11-15.png" alt="buku"><figcaption>Kandidat romance mendapat bar ♥ Hubungan di bawah bar Trust dan baris <b>Status</b> (Teman / Pacaran / Renggang s.d. hari X). <b>Suka / Tdk suka</b> untuk semua orang: yang sudah ketahuan ditulis (hijau/merah), sisanya "?". Catatan kecil hilang kalau semua sudah ketahuan.</figcaption></figure>
+  </div>
+
+  <h2>6. Ajakan & janji</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-08-ajakan-2026-11-15.png" alt="ajakan"><figcaption>Ngobrol saat ♥: NPC mengajak ketemu di tempat & jam event. Pilihan memakai kotak pilihan dialog yang sudah ada.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-09-chip-janji-2026-11-15.png" alt="chip"><figcaption>Chip janji di HUD kanan (di bawah chip Fokus kalau ada) sampai janji selesai atau lewat. NPC berangkat jalan kaki dari tempatnya ke tempat janji, lalu menunggu 2 jam.</figcaption></figure>
+  </div>
+
+  <h2>7. Event</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-10-kartu-judul-2026-11-15.png" alt="kartu"><figcaption>E di dekat NPC yang menunggu: kartu judul (nama · Event n dari 5, judul, tempat & waktu, 5 kotak kemajuan).</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-11-adegan-narasi-2026-11-15.png" alt="narasi"><figcaption>Narasi (abu-abu) dan dialog berpotret, maks 120 karakter per halaman.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-12-pilihan-event-2026-11-15.png" alt="pilihan"><figcaption>Panel pilihan: 3 jawaban, urutan diacak, teks dibungkus sampai 3 baris. ↑↓ / klik, tidak bisa Esc. Angka Hubungan tidak ditampilkan sebelum memilih.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a4-draf-13-hasil-event-2026-11-15.png" alt="hasil"><figcaption>Reaksi NPC, lalu toast ♥ Hubungan (+15 / +5 hijau, -10 merah). Jam maju 30 menit. E5 berhasil: toast "Kamu dan Adji resmi pacaran".</figcaption></figure>
+  </div>
+
+  <div class="note"><b>Yang perlu kamu review:</b><ol>
+    <li>12 ikon barang hadiah, harga, dan tempat belinya (oleh-oleh di etalase Ci Lina).</li>
+    <li>Penanda ♥, teks prompt "G Beri Hadiah", panel Beri Hadiah, panel Beli Bungkus.</li>
+    <li>Buku Kenalan: bar ♥, Status, Suka/Tdk suka yang terungkap.</li>
+    <li>Ajakan + chip janji, kartu judul event, panel 3 pilihan, toast hasil.</li>
+  </ol></div>
+</main></body></html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Masak & Makan v3</title><link rel="stylesheet" href="style.css">
+<style>.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}.pair figure{margin:0}.pair figcaption{font-size:13px;opacity:.85;margin-top:6px;max-width:470px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}.shot{width:480px;max-width:100%;image-rendering:pixelated;border:1px solid #4a3328;border-radius:6px}
+table{border-collapse:collapse;font-size:14px;margin:6px 0}td,th{border:1px solid #4a3328;padding:3px 8px;text-align:left}</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Masak & Makan (Fase 2h)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="tanjung.html">Tanjung Arum</a><a class="on" href="makan.html">Masak & Makan</a></nav>
+  <p><b>DRAF, menunggu ACC.</b> Permintaan user 2026-11-13: belanja bahan makanan di Warung Bu Ratna, lalu masak & makan di rumah/kos untuk menambah energi. Sumber gambar: <code>design/v3/src/makan.js</code> (ikon 16×16 piksel, garis luar coklat tua seperti ikon papan nama).</p>
+
+  <h2>1. Ikon bahan (dijual di warung)</h2>
+  <div class="frame"><canvas id="bahan"></canvas></div>
+  <h2>2. Ikon masakan</h2>
+  <div class="frame"><canvas id="masak"></canvas></div>
+  <p class="cap">Atas: ikon HD 32×32 (16×16 dihaluskan 2× dengan cara yang sama seperti teks HD), diperbesar 2× di halaman ini. Bawah: versi besar 64×64 untuk kotak warung.</p>
+  <h2>3. Kulkas</h2>
+  <div class="frame"><canvas id="kulkas"></canvas></div>
+  <p class="cap">Kulkas rumah 2 pintu (freezer di atas), ada kertas catatan & magnet. Diletakkan di dekat dapur: Kos Melati (kulkas bersama, sudut kanan), Kontrakan, Rumah Subsidi, Rumah Estetik. Gambar ruangan lama tidak diubah, kulkas ditambahkan.</p>
+
+  <h2>4. Panel HD & ruangan (digambar dengan mesin panel game yang sudah ada)</h2>
+  <div class="pair" id="panels"></div>
+
+  <h2>5. Angka usulan</h2>
+  <table><tr><th>Masakan</th><th>Bahan</th><th>Waktu</th><th>Energi</th><th>Modal</th></tr>
+  <tbody id="tbl"></tbody></table>
+
+  <div class="note"><b>Yang perlu kamu review:</b><ol><li>Ikon versi HD.</li><li>Kulkas: gambar & letaknya di 4 tempat tinggal.</li><li>Panel Kulkas & kapasitas (Tas 12, Kulkas 40).</li><li>Panel warung (tab Bahan Makanan / Bibit Herba), Tas, Dapur.</li><li>Harga dan energi di tabel.</li></ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+function sheet(id,list){const cw=72;const[c,x]=cv(list.length*cw+8,132);R(x,0,0,c.width,c.height,'#e8dcc0');
+  list.forEach(([key,n],i)=>{const X=8+i*cw;x.drawImage(ICF_HD[key],X+8,6);T(x,n,X+24-TW(n,9)/2,42,'#4a230e',9);x.drawImage(epxImg(ICF_HD[key]),X,60);});
+  const el=document.getElementById(id);el.width=c.width*2;el.height=c.height*2;el.style.maxWidth='100%';const g=el.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0,el.width,el.height);}
+sheet('bahan',FOOD_DRAFT.bahan);sheet('masak',FOOD_DRAFT.masak);
+(()=>{const f=homeFridge(),[c,x]=cv(140,56);R(x,0,0,140,56,'#e8dcc0');x.drawImage(f,8,5);x.drawImage(homeFridge(false),40,5);T(x,'kulkas',72,20,'#4a230e',9);T(x,'24×46',72,32,'#7a4a26',9);
+  const el=document.getElementById('kulkas');el.width=c.width*4;el.height=c.height*4;const g=el.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(c,0,0,el.width,el.height);})();
+const SHOTS=[['fase2h-draf-01-warung','Warung Bu Ratna, tab Bahan Makanan: ikon besar HD, angka di pojok = jumlah di tas. Pilih bahan, ◀▶ jumlah, Beli. Belanjaan masuk Tas (isi maks 12). Tab Bibit Herba untuk kebun (Fase 2g).'],
+ ['fase2h-draf-02-tas','Tas, hotkey I (juga di menu Esc): bahan + bekal, jumlah di bawah ikon. Minyak & Mayo dihitung takaran (1 botol = 5, 1 botol = 1 isi tas). Susu & bekal bisa langsung dimakan dari sini.'],
+ ['fase2h-draf-05-panel-kulkas','Kulkas (E di depan kulkas): kiri Tas, kanan Kulkas (isi maks 40). Simpan 1 / Simpan Semua, Tab pindah sisi untuk Ambil.'],
+ ['fase2h-draf-03-dapur','Dapur (E di dapur): bahan diambil dari tas + kulkas. Merah = kurang. Masak & Makan langsung, atau Jadi Bekal.'],
+ ['fase2h-draf-06-matang','Setelah masak: kartu Matang! (waktu berjalan, SFX gorengan).'],
+ ['fase2h-draf-04-kulkas-kos','Kos Melati ruang bersama: kulkas bersama di sudut kanan, di bawah dapur.'],
+ ['fase2h-draf-07-kulkas-rumah2','Kontrakan: kulkas di samping dapur.'],['fase2h-draf-07-kulkas-rumah3','Rumah Subsidi: kulkas di kiri dapur.'],['fase2h-draf-07-kulkas-rumah4','Rumah Estetik: kulkas di antara dapur & rak buku.']];
+document.getElementById('panels').innerHTML=SHOTS.map(([f,c])=>'<figure><img class="shot" src="../../production/qa/evidence/'+f+'-2026-11-13.png" alt="'+c+'"><figcaption>'+c+'</figcaption></figure>').join('');
+const price=Object.fromEntries(FOOD_DRAFT.bahan.map(b=>[b[0],b[2]/(b[0]==='minyak'||b[0]==='mayo'?5:1)]));
+const need={saladSayur:['sayur','mayo'],saladBuah:['buah','mayo'],telurCeplok:['telur','minyak'],ayamGoreng:['ayam','minyak'],ikanGoreng:['ikan','minyak'],burger:['roti','daging','minyak']};
+document.getElementById('tbl').innerHTML=[['susu','Susu (minum langsung)','Susu',0,5],...FOOD_DRAFT.masak].map(([k,n,b,m,e])=>{const cost=(need[k]||['susu']).reduce((a,q)=>a+price[q],0);
+  return '<tr><td>'+n+'</td><td>'+b+'</td><td>'+(m?m+' menit':'-')+'</td><td>+'+e+'</td><td>Rp '+cost.toLocaleString('id-ID')+'</td></tr>';}).join('');
+</script></body></html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kencan & Nikah v3</title><link rel="stylesheet" href="style.css">
+<style>.tools{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.tools button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.tools button.on{background:var(--accent);color:#2a1408}
+.frame{overflow-x:auto}.cap{font-size:13px;opacity:.85}.shot{width:480px;max-width:100%;image-rendering:pixelated;border:1px solid #4a3328;border-radius:6px;display:block}
+#panels{display:flex;flex-wrap:wrap;gap:14px}#panels figure{margin:0;max-width:480px}#panels figcaption{font-size:13px;opacity:.85;margin-top:6px}
+canvas{image-rendering:pixelated}</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Kencan, Lamaran, Menikah (Fase 3a-5)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="tanjung.html">Tanjung Arum</a><a href="hubungan.html">Hubungan</a><a class="on" href="nikah.html">Kencan & Nikah</a></nav>
+  <p><b>DRAF, menunggu ACC.</b> Usulan 3a-5 sudah di-ACC ("ACC semua", 2026-11-16). Sumber gambar: <code>design/v3/src/nikah.js</code> (belum masuk build game). Panel UI di bagian 6 diambil dari salinan draf game (<code>design/v3/nikah-game.html?uji=klinik2</code>), bukan dari game utama.</p>
+
+  <h2>1. Tanjung Arum diperlebar (768×270, kamera bergeser ke samping)</h2>
+  <div class="tools" id="tz"><button data-s="kemarau" class="on">Kemarau</button><button data-s="hujan">Hujan</button><button data-l="1">Label</button></div>
+  <div class="frame"><canvas id="zone"></canvas></div>
+  <p class="cap">Dari kiri: halte + bus, Bahari Medika, <b>Emas Lina</b> (baru), <b>Toserba Samudra</b> (baru, 2 lantai), Toko Ikan, pelabuhan. Dermaga tetap di tempatnya. Layar game 480 lebar, jadi kamera ikut pemain seperti zona Rimbasari.</p>
+
+  <h2>2. Bangunan baru (diperbesar 2×)</h2>
+  <div class="frame"><canvas id="ext"></canvas></div>
+
+  <h2>3. Interior</h2>
+  <div class="frame"><canvas id="rooms"></canvas></div>
+  <p class="cap">Kiri: <b>Emas Lina</b> 240×168, Ci Lina di belakang etalase. Cincin lamaran 12jt, kalung 1,5jt, gelang 800rb. Tengah: <b>Toserba Samudra</b> 320×200: rak baju pria (kiri), rak wanita + manekin, cermin, rak kosmetik, pojok olahraga, rak barang lain, kasir Mbak Yuni dekat pintu. Kanan: <b>Balai Kota hari pernikahan</b> 320×200 (hanya hari itu): pelaminan, janur kuning, bunga ucapan, kursi tamu dua sisi, karpet merah, meja tumpeng. Hari biasa interior Balai Kota tetap seperti sekarang.</p>
+
+  <h2>4. Barang hadiah baru (33 ikon 16×16, diperbesar 3×)</h2>
+  <div class="frame"><canvas id="icons"></canvas></div>
+  <div id="taste"></div>
+
+  <h2>5. Penjaga toko & keluarga di pernikahan (char3, tanpa aset baru)</h2>
+  <div class="frame"><canvas id="family"></canvas></div>
+  <p class="cap">Keluarga tiba pagi hari pernikahan dan <b>berjalan</b> dari asalnya (Terminal untuk yang naik bus, gerbang untuk yang jalan kaki) ke Balai Kota, lalu pulang lewat jalan yang sama setelah acara.</p>
+
+  <h2>6. Panel & adegan di game (salinan draf)</h2>
+  <div id="panels"></div>
+
+  <div class="note"><b>Yang perlu kamu review:</b><ol>
+    <li>Tanjung Arum lebar: susunan 5 bangunan, warna Emas Lina (merah-emas) dan Toserba (biru-kuning).</li>
+    <li>Interior Emas Lina, Toserba, dan Balai Kota versi pernikahan.</li>
+    <li>33 ikon barang baru: sudah terbaca semua?</li>
+    <li>Sosok keluarga tiap kandidat dan penjaga toko.</li>
+    <li>Panel kencan, belanja, lamaran, telepon keluarga, pernikahan, status Menikah, laporan Adji.</li></ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+const st={season:'kemarau',label:false};
+const drawZ=()=>show('zone',drawTanjungWide(PAL[st.season],{label:st.label,player:[chr('pF',{dir:'down'}),40,170]}),2);
+drawZ();document.getElementById('tz').addEventListener('click',e=>{const b=e.target;if(b.tagName!=='BUTTON')return;
+  if(b.dataset.s){st.season=b.dataset.s;b.parentNode.querySelectorAll('[data-s]').forEach(q=>q.classList.toggle('on',q===b));}
+  if(b.dataset.l){st.label=!st.label;b.classList.toggle('on',st.label);}drawZ();});
+(()=>{const items=[['Emas Lina',EXT.tokoEmas],['Toserba Samudra',EXT.toserba],['Bahari Medika (lama)',EXT.bahari]];
+  const W=470,H=170;const[c,x]=cv(W,H);R(x,0,0,W,H,'#e8dcc0');let X=6;items.forEach(([n,img])=>{x.drawImage(img,X,H-14-img.height);T(x,n,X,H-12,'#4a230e',8);X+=img.width+12;});show('ext',c,2);})();
+(()=>{const a=renderRoom('tokoEmas',{chars:[[char3(NIKAH_CAST.lina.s),112,40]]}),b=renderRoom('toserba',{chars:[[char3(NIKAH_CAST.yuni.s),236,96]]}),
+  cs=['adji','raka','harjo','ratna','dimas','wulan'].map(k=>CH[k]);
+  const d=renderRoom('balaiNikah',{chars:[[char3(WED.groom(CAST.find(c=>c.id==='adji').s)),140,52],[char3(WED.bride(CAST.find(c=>c.id==='pF').s)),164,52],[CH.harjo,150,90],[cs[1],40,82],[cs[3],62,110],[cs[4],196,82],[cs[5],218,110]]});
+  const[c,x]=cv(a.width+b.width+d.width+24,Math.max(a.height,b.height,d.height));R(x,0,0,c.width,c.height,'#1a0f0c');x.drawImage(a,0,0);x.drawImage(b,a.width+12,0);x.drawImage(d,a.width+b.width+24,0);show('rooms',c,1.5);})();
+(()=>{const ks=Object.keys(NIKAH_ITEMS),cols=9,cw=76,chh=62;const[c,x]=cv(cols*cw+4,Math.ceil(ks.length/cols)*chh+4);R(x,0,0,c.width,c.height,'#f2e6c8');
+  ks.forEach((k,i)=>{const X=4+(i%cols)*cw,Y=4+(i/cols|0)*chh;R(x,X+18,Y,36,36,'#ead2a4');x.drawImage(ICN[k],X+20,Y+2,32,32);const it=NIKAH_ITEMS[k],w=it[0].split(' ');
+    T(x,w[0],X+2,Y+38,'#4a230e',8);if(w[1])T(x,w.slice(1).join(' '),X+2,Y+46,'#4a230e',8);T(x,(it[1]>=1e6?(it[1]/1e6+'').replace('.',',')+'jt':(it[1]/1000)+'rb'),X+52,Y+38,'#8a2a2a',8);});show('icons',c,1.5);
+  document.getElementById('taste').innerHTML='<table><tr><th>Tab Toserba</th><th>Barang</th></tr>'+TOSERBA_TABS.map(([t,l])=>'<tr><td>'+t+'</td><td>'+l.map(k=>NIKAH_ITEMS[k][0]+' '+(NIKAH_ITEMS[k][1]/1000)+'rb').join(' · ')+'</td></tr>').join('')+'<tr><td>Emas Lina</td><td>Cincin Lamaran 12jt (setelah pacaran, maks 1) · Kalung Emas 1,5jt · Gelang Emas 800rb</td></tr></table>'+
+    '<p><b>Selera baru</b> (selera lama tetap):</p><table><tr><th>NPC</th><th>Suka</th><th>Tidak suka</th></tr>'+Object.entries(NIKAH_TASTE).map(([id,t])=>'<tr><td>'+((CAST.find(c=>c.id===id)||{}).name||id)+'</td><td>'+(t.suka||[]).map(k=>NIKAH_ITEMS[k][0]).join(', ')+'</td><td>'+(t.benci||[]).map(k=>NIKAH_ITEMS[k][0]).join(', ')+'</td></tr>').join('')+'</table>';})();
+(()=>{const groups=[['Penjaga toko',Object.values(NIKAH_CAST).map(v=>[v.name,char3(v.s)])],...Object.entries(FAMILY).map(([id,f])=>[(CAST.find(c=>c.id===id)||{}).name+' · '+f.from,[[(CAST.find(c=>c.id===id)||{}).name,CH[id]],...f.m.map(([n,s])=>[n,char3(s)])]])];
+  const W=470,rowH=52;const[c,x]=cv(W,groups.length*rowH+6);R(x,0,0,W,c.height,'#e8dcc0');
+  groups.forEach(([g,list],j)=>{const Y=4+j*rowH;T(x,g,6,Y,'#4a230e',8);list.forEach(([n,img],i)=>{const X=6+i*70;x.drawImage(img,X+20,Y+10);T(x,n.length>14?n.slice(0,14):n,X,Y+43,'#6a3416',7);});});show('family',c,2);})();
+const SHOTS=[["fase3a5-draf-06-tanjung-game","Tanjung Arum di game: kamera bergeser, Emas Lina dan Toserba di tengah."],["fase3a5-draf-07-toserba-dalam","Dalam Toserba (penjaga Mbak Yuni berjalan masuk dari pintu saat buka, di draf belum tampil)."],["fase3a5-draf-08-panel-toserba","Panel Toserba: 6 tab, ◀▶ pilih barang, ↑↓ ganti tab, Beli 1 masuk Tas."],["fase3a5-draf-09-panel-toserba-wanita","Tab Wanita."],["fase3a5-draf-11-panel-emas","Emas Lina: cincin terkunci sebelum pacaran (\"Setelah pacaran\"), kalung, gelang."],["fase3a5-draf-12-ajak-kencan","Ngobrol dengan pacar → Ajak kencan: 4 tempat, jam, biaya."],["fase3a5-draf-13-kartu-kencan","Kartu judul kencan di tempat janji (pacar berjalan ke sana dan menunggu 2 jam)."],["fase3a5-draf-14-pilihan-kencan","Satu pilihan per kencan, 2 jawaban (keduanya baik, beda reaksi)."],["fase3a5-draf-15-pilih-lamaran","Saat syarat lamaran lengkap: pilihan \"Ada yang mau aku omongin\" → janji lamaran di tempat sesuai kartu."],["fase3a5-draf-16-kartu-lamaran","Kartu judul lamaran (ikon cincin)."],["fase3a5-draf-17-lamaran-dialog","Adegan lamaran dari kartu 02a/02b."],["fase3a5-draf-18-telepon-keluarga","Kandidat menelepon keluarga (bergetar, titik berjalan)."],["fase3a5-draf-19-suara-keluarga","Suara keluarga di telepon: nama tanpa potret."],["fase3a5-draf-20-jadwal-nikah","Lamaran diterima: pernikahan 7 hari lagi, jam & tempat. Juga muncul di chip HUD dan kalender."],["fase3a5-draf-29-buku-tunangan","Buku Kenalan: status Tunangan + tanggal nikah."],["fase3a5-draf-21-kartu-pagi-nikah","Kartu pagi hari pernikahan: klinik tutup, keluarga turun dari bus."],["fase3a5-draf-22-balai-pernikahan","Balai Kota hari pernikahan: pengantin berbaju beskap & kebaya di pelaminan, keluarga & warga duduk (semua berjalan masuk dari pintu)."],["fase3a5-draf-23-kartu-pernikahan","Kartu pernikahan, lalu adegan upacara, momen khas, syukuran di Alun-alun."],["fase3a5-draf-24-sambutan","Momen khas dari kartu (sambutan Adji)."],["fase3a5-draf-25-bonus-menikah","Ringkasan bonus menikah setelah acara."],["fase3a5-draf-28-buku-menikah","Buku Kenalan: status Menikah."],["fase3a5-draf-26-laporan-adji","Bonus Adji: laporan mingguan tiap Senin pagi (angka contoh)."],["fase3a5-draf-27-pagi-di-rumah","Pasangan di rumah tiap pagi, kalimat 07b \"nikah @Rumah pagi\"."]];
+document.getElementById('panels').innerHTML=SHOTS.map(([f,cap])=>'<figure><img class="shot" src="../../production/qa/evidence/'+f+'-2026-11-16.png" alt=""><figcaption>'+cap+'</figcaption></figure>').join('')||'<p class="cap">(menyusul)</p>';
+</script></body></html>

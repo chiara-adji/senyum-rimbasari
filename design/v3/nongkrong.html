@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nongkrong v3</title><style>
+:root{--bg:#1d1412;--card:#2a1d19;--ink:#f5e8d8;--muted:#c4a88c;--accent:#f0a24a;--line:#4a3328}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "Segoe UI",system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:20px;margin:40px 0 6px;color:var(--accent)}
+p{margin:4px 0 10px;color:var(--muted)}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+nav a{color:var(--ink);background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:8px;text-decoration:none;font-size:14px}
+nav a.on{background:var(--accent);color:#2a1408;border-color:var(--accent)}
+.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}.pair figure{margin:0}.pair figcaption{font-size:13px;opacity:.85;margin-top:6px;max-width:480px}
+.shot{width:480px;max-width:100%;image-rendering:pixelated;border:1px solid #4a3328;border-radius:6px;display:block}
+.note{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 16px;margin-top:16px}
+.note li{margin:3px 0}
+table{border-collapse:collapse;font-size:14px;margin:6px 0}td,th{border:1px solid #4a3328;padding:3px 8px;text-align:left;vertical-align:top}th{background:var(--card)}
+code{color:#ffd86a}
+</style></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Nongkrong (Fase 3a-3)</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="npc.html">NPC</a><a href="makan.html">Masak & Makan</a><a class="on" href="nongkrong.html">Nongkrong</a></nav>
+  <p><b>ACC user 2026-11-15 ("ACC, kerjakan"), sudah dipasang di game.</b> Usulan 3a-3 sudah di-ACC ("usulan 3a-3 acc"). Halaman ini menunjukkan tampilan panel nongkrong dan chip Fokus di HUD. Semua gambar diambil langsung dari game (<code>?uji=klinik2</code>), panel memakai mesin panel HD yang sudah dipakai di Renovasi/Upgrade. Efeknya belum dipasang; ditulis setelah ACC.</p>
+
+  <h2>1. Titik nongkrong & prompt E</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-07-prompt-fokus-2026-11-15.png" alt="prompt"><figcaption>Berdiri di depan gerobak Angkringan sambil menghadap atas: prompt <b>E Nongkrong · Angkringan</b>. Kalau tidak menghadap gerobak, E tetap untuk ngobrol dengan NPC di dekatnya. Chip <b>Fokus</b> kecil di bawah kotak uang/energi/stres (hanya tampil di hari buff aktif).</figcaption></figure>
+  </div>
+  <table><tr><th>Tempat</th><th>Titik E</th></tr>
+    <tr><td>Kedai Kopi Seduh</td><td>Depan salah satu dari 3 meja bundar</td></tr>
+    <tr><td>Angkringan / Karaoke</td><td>Depan gerobak, menghadap atas</td></tr>
+    <tr><td>Lapangan Voli</td><td>Di dalam lapangan</td></tr>
+    <tr><td>Bukit Bintang</td><td>Depan salah satu dari 4 bangku</td></tr>
+    <tr><td>Perpustakaan</td><td>Depan salah satu dari 2 meja baca</td></tr>
+    <tr><td>Toko Roti Manis</td><td>Depan etalase roti (kasir Kak Tari tetap untuk ngobrol)</td></tr>
+  </table>
+
+  <h2>2. Panel nongkrong</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-01-kedai-2026-11-15.png" alt="kedai"><figcaption>Kedai Kopi Seduh: baris rasa, biaya · lama · jam buka, efek. Fokus dijelaskan di panel ("zona target +10%").</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-02-angkringan-sabtu-2026-11-15.png" alt="angkringan"><figcaption>Angkringan hari Sabtu 19:30: ada baris "Yang hadir" (3 nama pertama + jumlah sisanya) dan bagian Karaoke Malam Minggu. Tiga tombol: Nongkrong · Karaoke · Batal. Hari lain hanya Nongkrong · Batal.</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-05-bukit-2026-11-15.png" alt="bukit"><figcaption>Bukit Bintang (gratis).</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-06-roti-2026-11-15.png" alt="roti"><figcaption>Toko Roti Manis.</figcaption></figure>
+  </div>
+
+  <h2>3. Tombol mati</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-03-perpus-tutup-2026-11-15.png" alt="perpus tutup"><figcaption>Di luar jam buka: tombol gelap dengan alasan "Buka 9-19". Alasan lain: "Sudah hari ini", "Uang kurang", "Hanya Sabtu 19-23".</figcaption></figure>
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-04-voli-energi-2026-11-15.png" alt="voli energi"><figcaption>Voli dengan energi di bawah 10: "Energi kurang".</figcaption></figure>
+  </div>
+
+  <h2>4. Setelah nongkrong</h2>
+  <div class="pair">
+    <figure><img class="shot" src="../../production/qa/evidence/fase3a3-draf-08-toast-2026-11-15.png" alt="toast"><figcaption>Layar memudar singkat, jam maju 1 jam (Karaoke 2 jam), lalu efek tampil sebagai toast hijau. Trust: satu toast berisi daftar yang hadir.</figcaption></figure>
+  </div>
+
+  <div class="note"><b>Yang perlu kamu review:</b><ol>
+    <li>Panel (isi baris, ukuran, tombol) dan tombol mati dengan alasan.</li>
+    <li>Chip Fokus di HUD.</li>
+    <li>Titik E tiap tempat (tabel di atas). Di Angkringan, menghadap gerobak = nongkrong, selain itu = ngobrol.</li>
+    <li>Aturan jam: nongkrong harus selesai sebelum tutup. Jadi Kedai bisa dimulai sampai 21:00, Voli 16:00-17:00, Karaoke 19:00-21:00, Angkringan & Bukit Bintang sampai 23:00 (supaya tidak pingsan lewat 24:00).</li>
+    <li>Baris rasa tiap tempat (bahasa lisan, boleh diganti).</li>
+    <li><b>Revisi 2026-11-15:</b> kata "Nongkrong" hanya untuk Kedai, Angkringan, Toko Roti. Tempat lain: Bermain Voli, Melihat Bintang, Membaca, Karaoke (teks E dan tombol).</li>
+  </ol></div>
+</main></body></html>

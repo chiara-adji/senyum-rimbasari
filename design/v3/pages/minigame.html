@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minigame v3</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Minigame Tindakan</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a class="on" href="minigame.html">Minigame Tindakan</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Satu layar untuk setiap dokumen di <code>design/gdd/minigame/</code>. Setiap layar menampilkan langkah yang paling khas dari tindakan itu. Semua layar memakai tata letak yang sama: area kerja di kiri, kartu pasien + Bar Sakit + baki alat di kanan, instruksi dan kode input di bawah area kerja, dan baki herba di strip bawah. Ukuran asli 480×270, ditampilkan 2×. Angka di layar mengikuti draf minigame (belum ACC).</p>
+  <h2>0. Komponen bersama (00-aturan-umum)</h2>
+  <div class="frame"><canvas id="sheet"></canvas></div>
+  <p class="cap">Setiap input punya warna tetap: TEPAT hijau, GOSOK oranye, TAHAN biru, URUT ungu, RITME merah muda, PILIH kuning. Warna yang sama dipakai di chip instruksi setiap layar.</p>
+  <h2>1. Konsultasi · pilih cara bicara</h2>
+  <div class="frame"><canvas id="konsul"></canvas></div>
+  <p class="cap">Pak Gunawan bertanda "Curiga", jadi jawaban yang benar adalah Medis ditambah foto rontgen. Kartu jebakan Whitening muncul di langkah Rencana.</p>
+  <h2>2. Resep · rak obat</h2>
+  <div class="frame"><canvas id="resep"></canvas></div>
+  <p class="cap">Bu Yati hamil trimester 1, jadi pereda sakit yang aman adalah parasetamol. Kertas resep terisi bertahap di kanan.</p>
+  <h2>3. Tambalan sementara · isi & padatkan</h2>
+  <div class="frame"><canvas id="sementara"></canvas></div>
+  <p class="cap">Gigi ditampilkan dari atas (oklusal). Bahan ZOE dipilih karena tindakan berikutnya PSA. Tambalan ini tidak ditagih sendiri.</p>
+  <h2>4. Tambal GIC · siapkan kavitas</h2>
+  <div class="frame"><canvas id="gic"></canvas></div>
+  <p class="cap">URUT kapas, kondisioner, bilas, lalu TAHAN untuk mengeringkan dan lepas di zona "lembap". Pelapik kuning muncul karena kariesnya dalam.</p>
+  <h2>5. Tambal komposit · isi berlapis (gigi depan)</h2>
+  <div class="frame"><canvas id="komposit"></canvas></div>
+  <p class="cap">Gigi 11 Andre patah di ujungnya. Komposit diisi per lapis dengan batas garis kuning 2 mm, lalu disinar LED. Warna A2 dipilih di awal.</p>
+  <h2>6. PSA kunjungan 1 · panjang kerja</h2>
+  <div class="frame"><canvas id="psa"></canvas></div>
+  <p class="cap">File masuk pelan dan dilepas di garis apeks. Di T2 garis apeks hanya terlihat di rontgen kecil. Apex locator (T3, belum dimiliki) diberi tanda silang di baki.</p>
+  <h2>7. Scaling · 4 panel rahang</h2>
+  <div class="frame"><canvas id="scaling"></canvas></div>
+  <p class="cap">Pak Yusuf punya riwayat jantung, jadi tombol ultrasonik dicoret dan pemain memakai scaler manual. Gusinya mudah berdarah karena pengencer darah.</p>
+  <h2>8. Cabut gigi susu · goyang & cabut</h2>
+  <div class="frame"><canvas id="susu"></canvas></div>
+  <p class="cap">Gigi susu Kiki goyang di depan, gigi tetapnya sudah tumbuh di belakang ("Kiki Hiu"). Ketukan RITME lebih longgar. Lidah Buaya aktif di baki herba.</p>
+  <h2>9. Cabut penyulit · separasi akar</h2>
+  <div class="frame"><canvas id="penyulit"></canvas></div>
+  <p class="cap">Langkah A–C disisipkan di antara bius dan goyang. Pak Hasan hipertensi: bius berepinefrin maksimal 2 karpul, jadi karpul ke-3 dicoret.</p>
+  <h2>10. Bedah minor · buang tulang</h2>
+  <div class="frame"><canvas id="bedah"></canvas></div>
+  <p class="cap">Gusi dibuka (flap), tulang di atas sisa akar dibuang dengan bor bedah sambil menahan Shift untuk air. Garis kuning putus-putus di bawah adalah zona saraf. Setelah selesai, pasien menginap di Puskesmas.</p>
+  <div class="note"><b>Yang perlu kamu review:</b><ol>
+    <li>Tata letak bersama (area kerja kiri, pasien/sakit/baki kanan, herba di bawah) sudah enak dibaca?</li>
+    <li>Gaya gambar gigi: potongan melintang (GIC, PSA, cabut, bedah), tampak depan (komposit, scaling, gigi susu), tampak atas (tambalan sementara). Ada yang mau diganti?</li>
+    <li>Warna 6 input sudah gampang dibedakan?</li>
+    <li>Ada layar yang terlalu ramai atau terlalu kosong?</li>
+  </ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+for(const k in MG_SCREENS){try{show(k,MG_SCREENS[k](),2);}catch(e){console.error(k,e);const el=document.getElementById(k);el.insertAdjacentHTML('afterend','<pre style="color:#c00">'+k+': '+e.message+'</pre>');}}
+</script></body></html>

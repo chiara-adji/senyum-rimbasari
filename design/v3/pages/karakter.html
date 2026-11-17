@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Karakter v3</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Karakter</h1>
+  <nav><a href="index.html">Ringkasan</a><a class="on" href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Sprite 24×32. Kepala sekarang 16×13 (sebelumnya 18×15). Mata 3×4 dengan kelopak, pupil, iris berwarna, dan kilau. Ditambah telinga, hidung, pipi, bulu mata, dan detail usia (keriput, kumis, jenggot). Semua ditampilkan 4× kecuali disebut lain.</p>
+
+  <h2>1. Close-up wajah (8×)</h2>
+  <div class="frame"><canvas id="zoom"></canvas></div>
+  <p class="cap">Kiri ke kanan: dokter wanita, Adji, Wulan, Pak Harjo, Mbah Darmi, Dimas.</p>
+
+  <h2>2. Pemain: 3 preset × 4 arah × animasi jalan</h2>
+  <div class="frame"><canvas id="dirs"></canvas></div>
+  <p class="cap">Per baris: depan (4 frame), belakang (4 frame), samping kanan (4 frame), samping kiri (cermin).</p>
+
+  <h2>3. Ekspresi</h2>
+  <div class="frame"><canvas id="expr"></canvas></div>
+  <p class="cap">Netral · senang · sedih · marah · kedip · kaget · malu · menyeringai · menyipit. Baris atas dokter wanita, baris bawah Adji.</p>
+
+  <h2>4. Pilihan kustomisasi pemain</h2>
+  <div class="frame"><canvas id="cust"></canvas></div>
+  <p class="cap">Baris 1: 4 warna kulit. Baris 2: 12 gaya rambut. Baris 3: 7 warna rambut. Baris 4: pakaian (jas dokter, scrubs, polo, kemeja, kardigan, blazer).</p>
+
+  <div id="groups"></div>
+
+  <div class="note"><b>Yang perlu kamu review:</b>
+    <ol>
+      <li>Ukuran kepala sekarang sudah pas?</li>
+      <li>Detail wajah (mata, alis, hidung, pipi, mulut) sudah cukup jelas?</li>
+      <li>Ada karakter yang desainnya mau diganti (warna, rambut, pakaian)?</li>
+    </ol></div>
+</main>
+<script src="lib.js"></script>
+<script>
+"use strict";
+const S=4;
+function sheet(id,list,cols,gap=28,pad=4,scale=S){const rows=Math.ceil(list.length/cols);const[c,x]=cv(cols*gap+pad*2,rows*36+pad);
+  list.forEach((img,i)=>{if(img)drawChar(x,img,pad+(i%cols)*gap,pad+Math.floor(i/cols)*36);});const el=document.getElementById(id);show(id,c,scale);}
+// 1. zoom
+(()=>{const ids=['pF','adji','wulan','harjo','darmi','dimas'];const[c,x]=cv(ids.length*26+2,34);ids.forEach((k,i)=>drawChar(x,CH[k],2+i*26,1));show('zoom',c,8);})();
+// 2. arah
+(()=>{const out=[];['pM','pF','pH'].forEach(id=>{[0,1,0,2].forEach(s=>out.push(chr(id,{step:s})));[0,1,0,2].forEach(s=>out.push(chr(id,{dir:'up',step:s})));
+  [0,1,0,2].forEach(s=>out.push(chr(id,{dir:'side',step:s})));[0,1,0,2].forEach(s=>out.push(flipX(chr(id,{dir:'side',step:s}))));});sheet('dirs',out,16,27);})();
+// 3. ekspresi
+(()=>{const ex=['neutral','happy','sad','angry','wink','surprised','shy','smirk','squint'];const out=[];['pF','adji'].forEach(id=>ex.forEach(e=>out.push(chr(id,{expr:e}))));sheet('expr',out,9);})();
+// 4. kustomisasi
+(()=>{const b=castBy('pM').s;const out=[];
+  ['L','Y','M','D'].forEach(t=>out.push(char3({...b,...sk(t)})));for(let i=0;i<8;i++)out.push(null);
+  ['short','side','spiky','messy','curly','buzz','slick','emo','long','wavy','bob','pony'].forEach(h=>out.push(char3({...castBy('pF').s,hair:h,lashes:['long','wavy','bob','pony'].includes(h)?1:0})));
+  Object.keys(HC).forEach(k=>out.push(char3({...castBy('pF').s,...hcol(k)})));for(let i=0;i<5;i++)out.push(null);
+  [['coat',{}],['scrubs',{top:'#3fae9c',legs:'#3fae9c'}],['polo',{top:'#c8414b'}],['shirt',{top:'#a8c8e8'}],['cardigan',{top:'#e3aa3c',inner:'#f7f2e4'}],['blazer',{top:'#2f3d63',inner:'#f7f2e4'}]].forEach(([st,o])=>out.push(char3({...castBy('pF').s,style:st,...o})));
+  sheet('cust',out,12);})();
+// 5. galeri per kelompok
+(()=>{const host=document.getElementById('groups');const groups=[['Romance','5. Kandidat romance (8)'],['Warga','6. Warga (12)'],['Staf','7. Kandidat staf (9)'],['Pasien','8. Pasien spesial (12)'],['Luar kota','9. Tokoh luar kota (4)']];
+  groups.forEach(([g,title])=>{host.insertAdjacentHTML('beforeend','<h2>'+title+'</h2><div class="cards" id="g_'+g.replace(' ','')+'"></div>');const box=document.getElementById('g_'+g.replace(' ',''));
+    CAST.filter(k=>k.grp===g).forEach(k=>{const card=document.createElement('div');card.className='card';const cvs=document.createElement('canvas');card.appendChild(cvs);
+      const[c,x]=cv(28,34);drawChar(x,CH[k.id],2,1);cvs.width=28;cvs.height=34;cvs.getContext('2d').drawImage(c,0,0);cvs.style.width='112px';
+      card.insertAdjacentHTML('beforeend','<b>'+k.name+'</b><span>'+k.role+'</span>');box.appendChild(card);});});})();
+</script></body></html>

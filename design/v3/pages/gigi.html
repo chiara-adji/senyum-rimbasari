@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gigi Potongan v2</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <h1>Senyum Rimbasari · Draf Visual v3 · Gigi Potongan v2</h1>
+  <nav><a href="index.html">Ringkasan</a><a href="karakter.html">Karakter</a><a href="bangunan.html">Bangunan</a><a href="peta.html">Peta</a><a href="ui.html">UI & Minigame</a><a href="minigame.html">Minigame Tindakan</a><a class="on" href="gigi.html">Gigi Potongan v2</a><a href="rontgen.html">Rontgen</a></nav>
+  <p>Revisi user 2026-11-12: proporsi email–dentin–pulpa di gigi potongan lama tidak realistis (tanduk pulpa hanya ±6 px di bawah email, kamar pulpa sampai setengah atas mahkota), jadi preparasi terlihat sulit dan mudah perforasi. Gigi v2 memakai bentuk luar yang sama (mahkota, akar, gusi, tulang), tapi isinya mengikuti proporsi gambar anatomi rujukan: email tebal di oklusal dan menipis ke leher gigi, dentin tebal, kamar pulpa kecil dan rendah (atap kira-kira setengah tinggi mahkota), ada pembuluh darah dan saraf di pulpa.</p>
+
+  <h2>1. Lama vs baru</h2>
+  <div class="frame"><canvas id="cmp"></canvas></div>
+  <p class="cap">Kiri: gigi lama (toothX). Kanan: gigi v2 (toothR). Garis putus-putus: puncak tanduk pulpa. Angka: jarak dari dasar fisura ke tanduk pulpa (piksel gambar).</p>
+
+  <h2>2. Gigi v2 resolusi asli 2× (HD)</h2>
+  <div class="frame"><canvas id="hd"></canvas></div>
+  <p class="cap">Digambar langsung 2× (bukan diperbesar), jadi tepi email, garis tubulus dentin, pembuluh darah dan saraf tetap halus. Versi ini yang dipakai saat langkah bor/akses/kerok diperbesar.</p>
+
+  <h2>3. Varian untuk minigame</h2>
+  <div class="frame"><canvas id="var"></canvas></div>
+  <p class="cap">Karies dangkal (GIC biasa), karies dalam (pulpitis reversibel), kavitas + pelapik, tambalan GIC, open akses (devitalisasi/abses: atap & tanduk pulpa terbuang), akses + saluran kosong (mumifikasi).</p>
+
+  <h2>4. Tampilan zoom di minigame (area kerja)</h2>
+  <div class="frame"><canvas id="zoom"></canvas></div>
+  <p class="cap">Seperti di langkah Bor karies dan Open akses: mahkota diperbesar 2× di area kerja. Kiri: karies dalam sebelum dibor. Kanan: area akses (arsir kuning) sebelum dibor. Jarak karies ke pulpa sekarang ada lapisan dentin yang jelas.</p>
+<script src="lib.js"></script>
+<script>
+"use strict";
+const lab=(x,t,X,Y,col)=>{x.font='bold 13px Segoe UI, sans-serif';x.fillStyle='#000a';x.fillText(t,X+1,Y+1);x.fillStyle=col||'#f5e8d8';x.fillText(t,X,Y);};
+function horn(img,isP){ // cari baris pertama pulpa (warna merah/pink) di tengah ±20
+  const x=img.getContext('2d'),d=x.getImageData(0,0,img.width,img.height).data,w=img.width;
+  for(let j=0;j<img.height;j++)for(let i=Math.floor(w/2)-25*(w/170);i<Math.floor(w/2)+25*(w/170);i++){const k=(j*w+i)*4;if(isP(d[k],d[k+1],d[k+2]))return j;}return -1;}
+const pink=(r,g,b)=>r>200&&g<170&&b>110&&r-g>70;
+// 1. perbandingan
+(()=>{const S=3,a=toothX({}),b=toothR({}),c=document.getElementById('cmp');c.width=170*S*2+60;c.height=166*S+30;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+  x.fillStyle='#1a2a2a';x.fillRect(0,0,c.width,c.height);x.drawImage(a,10,20,170*S,166*S);x.drawImage(b,170*S+50,20,170*S,166*S);
+  lab(x,'Lama (toothX)',14,16);lab(x,'Baru v2 (toothR)',170*S+54,16);
+  [[a,10],[b,170*S+50]].forEach(([im,X])=>{const h=horn(im,pink);x.strokeStyle='#7af07a';x.setLineDash([6,4]);x.beginPath();x.moveTo(X,20+h*S);x.lineTo(X+170*S,20+h*S);x.stroke();x.setLineDash([]);
+    lab(x,'tanduk pulpa: '+(h-17)+' px di bawah fisura',X+8,20+h*S-6,'#9af0a0');});})();
+// 2. HD
+(()=>{const b=toothR({},2),c=document.getElementById('hd');c.width=340*1.5;c.height=332*1.5;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#1a2a2a';x.fillRect(0,0,c.width,c.height);x.drawImage(b,0,0,c.width,c.height);})();
+// 3. varian
+(()=>{const V=[['Karies dangkal',{caries:'shallow'}],['Karies dalam',{caries:'deep'}],['Kavitas + pelapik',{cav:'deep',liner:true}],['Tambalan GIC',{cav:'deep',fill:1}],['Open akses',{caries:'deep',access:true}],['Akses + saluran',{access:true,canals:true}]];
+  const k=1.25,cw=340*k,ch=332*k*.62,c=document.getElementById('var');c.width=cw*3+40;c.height=(ch+28)*2+10;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#1a2a2a';x.fillRect(0,0,c.width,c.height);
+  V.forEach(([t,o],n)=>{const im=toothR(o,2),X=10+(n%3)*(cw+10),Y=24+Math.floor(n/3)*(ch+28);x.drawImage(im,0,0,340,332*.62,X,Y,cw,ch);lab(x,t,X+4,Y-6);});})();
+// 4. zoom area kerja (324×156 satuan, HD 2×)
+(()=>{const c=document.getElementById('zoom');c.width=324*2*2+20;c.height=156*2;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.fillStyle='#16302c';x.fillRect(0,0,c.width,c.height);
+  const hatch=im=>{const [d,dx]=cv(im.width,im.height);dx.drawImage(im,0,0);const A=toothR({caries:'deep'},2),B=toothR({caries:'deep',access:true},2),pa=A.getContext('2d').getImageData(0,0,A.width,A.height).data,pb=B.getContext('2d').getImageData(0,0,B.width,B.height).data,id=dx.getImageData(0,0,d.width,d.height);
+    for(let q=0;q<pa.length;q+=4)if(Math.abs(pa[q]-pb[q])+Math.abs(pa[q+1]-pb[q+1])+Math.abs(pa[q+2]-pb[q+2])>20){const p=q/4,i=p%d.width,j=(p/d.width)|0;const t=(i+j)%8<4?.6:.35,yc=(i+j)%8<4?[255,216,106]:[255,236,160];for(let z=0;z<3;z++)id.data[q+z]=id.data[q+z]+(yc[z]-id.data[q+z])*t;}dx.putImageData(id,0,0);return d;};
+  [[toothR({caries:'deep'},2),'Bor karies (karies dalam)'],[hatch(toothR({caries:'deep'},2)),'Open akses (arsir = area bor)']].forEach(([im,t],n)=>{const X=n*(648+20);x.save();x.beginPath();x.rect(X,0,648,312);x.clip();
+    // pusat area target ± (85, 34) gambar asli → tengah kiri area kerja; 1 px gambar 2× = 1 satuan = 2 px HD
+    x.drawImage(im,X+(100-85*2+(-0))*2,(78-34*2)*2,im.width*2,im.height*2);x.restore();lab(x,t,X+10,20,'#9ad8c8');});})();
+</script></body></html>

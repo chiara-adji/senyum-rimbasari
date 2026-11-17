@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kos Melati & Kontrakan v3</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.pair figure{margin:0;background:#120c0a;border:1px solid #4a3328;border-radius:8px;padding:8px}
+.pair figcaption{font-size:13px;opacity:.85;margin-top:6px;max-width:420px}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+</style></head>
+<body><main>
+<h1>Draf v3 · Kos Melati sebagai rumah Lv 1 & Kontrakan (menunggu ACC, 2026-11-13)</h1>
+<p>Ide user: Lv 1 = ngekos di Kos Melati (Rp 50rb/hari). Rumah ujung kiri Kampung Asri sejak awal berbentuk rumah Lv 2 dan baru jadi rumah pemain setelah dikontrak (Rp 2jt/bulan). Gambar lama tidak diubah; draf ini hanya menambah varian.</p>
+
+<h2>A. Eksterior rumah ujung kiri</h2>
+<div class="pair" id="ext"></div>
+
+<h2>B. Kampung Asri saat permainan baru (rumah ujung kiri = Lv 2 + papan)</h2>
+<div class="pair" id="zone"></div>
+
+<h2>C. Kos Melati · Ruang Bersama: tambah pintu kamar 5 (kamar pemain)</h2>
+<div class="pair" id="kos"></div>
+
+<h2>D. Kos Melati · Kamar 5 (memakai interior Kamar Sewa lama, tanpa gambar baru)</h2>
+<div class="pair" id="kamar"></div>
+</main>
+<script src="lib.js"></script>
+<script>
+const S2=2;
+function show(host,canvas,cap,scale=S2){const f=document.createElement('figure');const c=document.createElement('canvas');c.width=canvas.width*scale;c.height=canvas.height*scale;
+  const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(canvas,0,0,c.width,c.height);f.appendChild(c);const fc=document.createElement('figcaption');fc.textContent=cap;f.appendChild(fc);document.getElementById(host).appendChild(f);}
+
+/* Papan "DIKONTRAKKAN" di halaman depan (font mini 3x5, tanpa gambar baru). */
+function papanKontrak(x,X,Y){
+  const W=TWm('2 JT SEBULAN')+6;
+  R(x,X+6,Y+15,2,14,'#5a3a24');R(x,X+W-8,Y+15,2,14,'#5a3a24');R(x,X+6,Y+15,1,14,'#7a5234');R(x,X+W-8,Y+15,1,14,'#7a5234');
+  R(x,X-1,Y-1,W+2,18,'#2a1610');R(x,X,Y,W,16,'#fbf4e2');R(x,X,Y,W,1,'#ffffff');R(x,X,Y+15,W,1,'#d8c8a8');
+  const t1='DIKONTRAK',t2='2 JT SEBULAN';Tm(x,t1,X+(W>>1)-(TWm(t1)>>1),Y+2,'#a8202a');Tm(x,t2,X+(W>>1)-(TWm(t2)>>1),Y+9,'#4a230e');}
+/** Rumah ujung kiri saat belum dikontrak: EXT.rumah2 + papan di halaman kanan. */
+const extKontrak=(()=>{const b=EXT.rumah2,PW=TWm('2 JT SEBULAN')+10;const[c,x]=cv(b.width+PW,b.height);x.drawImage(b,0,0);const[l,lx]=cv(c.width,c.height);papanKontrak(lx,b.width+1,b.height-31);softOutline(l);x.drawImage(l,0,0);return c;})();
+
+show('ext',EXT.rumah1,'LAMA · Lv 1 Kamar Sewa (rumah petak 4 pintu). Tidak dipakai lagi di peta.');
+show('ext',extKontrak,'BARU · awal game: rumah Lv 2 + papan "DIKONTRAK · 2 JT SEBULAN". Pintu terkunci; E di pintu membuka panel kontrak.');
+show('ext',EXT.rumah2,'Lv 2 Kontrakan (sudah dikontrak): papan hilang, pintu bisa dimasuki.');
+
+/* Zona: blds[0] memakai kunci 'rumah3'; ganti sementara dengan varian kontrak. */
+(()=>{const keep=EXT.rumah3;EXT.rumah3=extKontrak;const z=drawZone(ZONES.kampung,PAL.kemarau);EXT.rumah3=keep;
+  const[c,x]=cv(480,270);x.drawImage(z,0,-60);show('zone',c,'Kampung Asri kiri (480×270, kamera mulai). Rumah ujung kiri sudah berbentuk Lv 2.');
+  const[c2,x2]=cv(z.width,z.height);x2.drawImage(z,0,0);show('zone',c2,'Seluruh Kampung Asri 960×432 (skala 1). Kos Melati di ujung kanan.',1);})();
+
+/* Kos ruang bersama: jendela kiri diganti pintu 1, pintu dinomori ulang, pintu 5 (teal + hati) di kanan. */
+function wDoor5(X,Y){return x=>{wDoorNum(X,Y,22,'5','#3a8a8a')(x);
+  const rows=['.RR.RR.','RRRRRRR','RRRRRRR','.RRRRR.','..RRR..','...R...'];rows.forEach((r,j)=>{for(let i=0;i<r.length;i++)if(r[i]==='R')P(x,X+7+i,Y-8+j,i<2&&j<2?'#ffb0b0':'#e6383e');});}}
+const kosBaru={...ROOMS3.kos,
+  wallDeco:[wDoorNum(10,12,22,'PAK UDIN','#3f6a4a'),wDoorNum(44,12,22,'1'),wMelatiPhoto(78,12),wDoorNum(110,12,22,'2'),wDoorNum(140,12,22,'3'),wCorkBoard(172,12),wDoorNum(212,12,22,'4'),wDoor5(242,12),wClock(282,20),wShelf(272,30,36)],
+  floorDeco:[rug(146,118,90,46,RUG.green),rug(102,50,190,12,RUG.earth)]};
+show('kos',renderRoom('kos'),'LAMA · 5 pintu (Pak Udin, 1–4) + jendela.');
+(()=>{const keep=ROOMS3.kos;ROOMS3.kos=kosBaru;const img=renderRoom('kos');ROOMS3.kos=keep;
+  show('kos',img,'BARU · jendela kiri jadi pintu 1, nomor 1–4 bergeser, pintu 5 (teal + hati, warna pintu Kamar Sewa lama) = kamar pemain. Berdiri di depannya + E = masuk kamar.');})();
+
+show('kamar',renderRoom('rumah1'),'Kamar 5: interior 240×168 yang sama dengan Kamar Sewa lama (kasur lantai, kipas, meja kerja, kalender, 4 pot di jendela). Nama di game: "Kos Melati · Kamar 5". Keluar = kembali ke ruang bersama di depan pintu 5.');
+</script>
+</body></html>

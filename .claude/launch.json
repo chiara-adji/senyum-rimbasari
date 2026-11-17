@@ -1,0 +1,134 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "senyum-rimbasari",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8123
+    },
+    {
+      "name": "senyum-2f",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8126,
+      "env": {
+        "PORT": "8126"
+      }
+    },
+    {
+      "name": "senyum-2h",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8127,
+      "env": {
+        "PORT": "8127"
+      }
+    },
+    {
+      "name": "senyum-2g",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8128,
+      "env": {
+        "PORT": "8128"
+      }
+    },
+    {
+      "name": "senyum-3a",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8129,
+      "env": {
+        "PORT": "8129"
+      }
+    },
+    {
+      "name": "senyum-rev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8131,
+      "env": {
+        "PORT": "8131"
+      }
+    },
+    {
+      "name": "senyum-3a2",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8135,
+      "env": {
+        "PORT": "8135"
+      }
+    },
+    {
+      "name": "senyum-dialog",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8133,
+      "env": {
+        "PORT": "8133"
+      }
+    },
+    {
+      "name": "senyum-3a3",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8137,
+      "env": {
+        "PORT": "8137"
+      }
+    },
+    {
+      "name": "senyum-3a4",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8139,
+      "env": {
+        "PORT": "8139"
+      }
+    },
+    {
+      "name": "senyum-3a5",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8140,
+      "env": {
+        "PORT": "8140"
+      }
+    },
+    {
+      "name": "senyum-3b",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/dev-server.cjs"
+      ],
+      "port": 8141,
+      "env": {
+        "PORT": "8141"
+      }
+    }
+  ]
+}
